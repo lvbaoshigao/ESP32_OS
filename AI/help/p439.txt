@@ -1,0 +1,226 @@
+Chapter 12 Low-Power Management                                                                                                             GoBack
+
+
+                                      Register 12.1. PMU_HP_ACTIVE_DIG_POWER_REG (0x0000)
+
+
+
+
+                                         PD EN
+                                              N
+
+
+                                              N
+                                            _E
+
+
+                                           _E
+                                    U_ D_
+
+
+
+
+                                          N
+                                         PD
+                            _H AO EN
+
+
+
+
+                                 I_ LP
+                                       _E
+                                 CP P
+                               P_ N_
+
+
+
+
+                                      I_
+
+
+
+
+                               SP DS
+                         PD P_ D_
+
+
+
+
+                                   PD
+                                   IF
+
+
+
+
+                            D_ M_
+                       E_ H P
+
+
+
+
+                                _W
+        U_ d) TIV PD_ P_
+
+
+
+
+                         VD E
+                              HP
+    PM rve AC E_ _TO
+
+
+
+
+                       E_ M
+                           D_
+
+
+
+
+                    IV HP_
+       se P_ TIV PD
+
+
+
+
+                         P
+    (re _H AC E_
+
+
+
+
+                      E_
+
+
+
+
+                 CT E_
+        U P_ TIV
+
+
+
+
+                    IV
+
+
+
+
+             _A IV
+                 CT
+
+
+
+
+           HP CT
+    PM _H AC
+
+
+
+
+             _A
+
+
+
+
+        U_ P_A
+               )
+
+
+
+
+                                                                                                         d)
+        U P_
+
+
+
+
+            ed
+           HP
+
+
+
+
+                                                                                                       ve
+    PM _H
+
+
+
+
+    PM H
+          rv
+
+
+        U_
+
+
+
+
+                                                                                                        r
+       se
+
+
+
+
+                                                                                                     se
+        U
+  PM
+
+
+
+
+    PM
+    (re
+
+
+
+
+                                                                                                  (re
+   31    30   29   28   27   26           23   22   21   20                                                                                 0
+
+
+   0     0    0    0    0    0    0   0   0    0    0    0    0   0   0   0   0   0   0   0   0    0   0    0   0   0   0   0   0   0   0   0 Reset
+
+
+
+        PMU_HP_ACTIVE_VDD_SPI_PD_EN Configures whether to power down external flash in HP_ACTIVE
+              state.
+              0: Power up
+              1: Power down
+              (R/W)
+
+        PMU_HP_ACTIVE_HP_MEM_DSLP Configures whether to put Internal SRAMx into Deep-sleep
+              mode in HP_ACTIVE state.
+              0: Do not put Internal SRAMx into Deep-sleep
+              1: Put Internal SRAMx into Deep-sleep
+              (R/W)
+
+        PMU_HP_ACTIVE_PD_HP_WIFI_PD_EN Configures whether to power down Modem domain in
+              HP_ACTIVE state.
+              0: Power up
+              1: Power down
+              (R/W)
+
+        PMU_HP_ACTIVE_PD_HP_CPU_PD_EN Configures whether to power down CPU domain in
+              HP_ACTIVE state.
+              0: Power up
+              1: Power down
+              (R/W)
+
+        PMU_HP_ACTIVE_PD_HP_AON_PD_EN Configures whether to power down Modem power domain
+              in HP_ACTIVE state.
+              0: Power up
+              1: Power down
+              (R/W)
+
+        PMU_HP_ACTIVE_PD_TOP_PD_EN Configures whether to power down Peripherals domain in
+              HP_ACTIVE state.
+              0: Power up
+              1: Power down
+              (R/W)
+
+
+
+
+Espressif Systems                                                             439                                   ESP32-C6 TRM (Version 1.2)
+                                                              Submit Documentation Feedback
+

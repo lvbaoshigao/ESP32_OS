@@ -1,0 +1,4548 @@
+ESP32-C6 系列芯片
+技术规格书 版本 1.5
+
+ 搭载 RISC-V 32 位单核处理器的极低功耗 SoC
+ 2.4 GHz Wi-Fi 6 (802.11ax)、Bluetooth® 5 (LE)、Zigbee 及 Thread (802.15.4)
+ 芯片封装内可叠封 flash
+ 30 或 22 个 GPIO，丰富的外设
+ QFN40 (5×5 mm) 或 QFN32 (5×5 mm) 封装
+
+
+
+
+ 包括：
+    ESP32-C6
+
+    ESP32-C6FH4
+
+    ESP32-C6FH8
+
+
+
+
+                                 www.espressif.com
+产品概述
+
+ESP32-C6 是一款支持 2.4 GHz Wi-Fi 6、Bluetooth 5、Zigbee 3.0 及 Thread 1.3 系统级芯片 (SoC)，集成了一个
+高性能 RISC-V 32 位处理器和一个低功耗 RISC-V 32 位处理器、Wi-Fi、Bluetooth LE、802.15.4 基带和 MAC、
+RF 模块及外设等。Wi-Fi、蓝牙及 802.15.4 共存，共用同一个天线。
+
+芯片的功能框图如下图所示。
+
+
+              乐鑫 ESP32-C6 Wi-Fi + Bluetooth® Low Energy + 802.15.4 SoC
+
+                                无线 MAC和基带                                                     RF
+
+                                   Bluetooth LE 基         802.15.4            2.4 GHz Balun         RF 合成器
+                 Wi-Fi 基带
+                                         带                  基带                   + Switch
+
+                                   Bluetooth LE 链         802.15.4
+                 Wi-Fi MAC                                                    2.4 GHz 发射器          2.4 GHz 接收器
+                                     路层控制器                 MAC
+
+
+                               HP 核心系统                                              HP 系统组件
+                                RISC-V 追踪编
+                                                     JTAG
+                HP RISC-V           码器                                锁相环           外部主晶振            快速 RC 振荡器
+                  32 位
+                 处理器
+                                    辅助调试            Cache
+                                                                      GDMA         事件任务矩阵              权限控制
+
+                       ROM                HP SRAM
+                                                                                                     主系统看门狗定
+                                                                     通用定时器          系统定时器
+                                                                                                        时器
+                                    安全
+
+                    Flash 加密               数字签名                                     HP 外设
+
+                                                                      SPI           MCPWM                RMT
+                   SHA              AES             ECC
+
+                                                                      UART            PCNT              TWAI®
+                   RNG             HMAC             RSA
+
+                                                                     PARLIO            I2S             LED PWM
+                          LP 核心系统和外设
+
+                                               eFuse 控制               I2C         USB 串口/JTAG SDIO 2.0 从机
+                                   LP SRAM
+                 LP RISC-V                         器
+                   32 位
+                   处理器                                                       温度传感器             SAR ADC
+                                     LP I2C     LP UART
+
+
+
+                                                            LP 系统组件
+                RTC 看门狗定
+                                     RTC 定时器           欠压检测器                  超级看门狗                 电源管理单元
+                    时器
+
+
+
+
+              模块默认上电的最低功耗模式（硬件预设）：
+                      Active
+                     Modem-sleep
+
+                     Light-sleep
+
+                     Deep-sleep
+
+
+
+                                                    ESP32-C6 功能框图
+
+
+更多关于功耗的信息，请参考章节 4.1.3.7 电源管理单元。
+
+
+
+
+乐鑫信息科技                                                           2                           ESP32-C6 系列芯片技术规格书 v1.5
+                                                          反馈文档意见
+产品特性
+
+Wi-Fi                                                           请注意 ESP32-C6 在 Station 模式下扫描时，
+                                                                SoftAP 信道会同时改变
+  • 工作在 2.4 GHz 频段，1T1R
+                                                               – 天线分集
+  • 工作信道中心频率范围：2412 ~ 2484 MHz
+                                                               – 802.11 mc FTM
+  • 数据速率高达 150 Mbps
+
+  • 支持 IEEE 802.11ax 协议：                              蓝牙
+        – 仅 20 MHz 非接入点工作模式 (20 MHz-only                • 低功耗蓝牙 (Bluetooth LE)：通过 Bluetooth 5.3 认
+          non-AP mode)                                     证
+        – MCS0 ~MCS9                                    • Bluetooth mesh
+        – 上行、下行正交频分多址接入 (OFDMA)，特                       • 高功率模式，发射功率最高 20 dBm
+          别适用于高密度应用下的多用户并发传输
+                                                        • 速率支持 125 Kbps、500 Kbps、1 Mbps、2 Mbps
+        – 下行多用户多输入多输出 (MU-MIMO)，提升
+                                                        • 广播扩展 (Advertising Extensions)
+          网络容量
+                                                        • 多广播 (Multiple Advertisement Sets)
+        – 波束成形接收端 (Beamformee)，提升信号质
+          量                                             • 信道选择 (Channel Selection Algorithm #2)
+
+        – 信道质量指示 (Channel quality indication,           • 功率控制 (LE Power Control)
+          CQI)                                          • Wi-Fi 与蓝牙共存，共用同一个天线
+        – 双载波调制 (dual carrier modulation, DCM)，
+          提高链路稳定性                                     IEEE 802.15.4
+        – 空间复用 (Spatial reuse)，提升网络容量                   • 兼容 IEEE 802.15.4-2015 协议
+        – 目标唤醒时间 (TWT)，提供更好的节能机制                        • 工作在 2.4 GHz 频段，支持 OQPSK PHY
+  • 完全兼容 IEEE 802.11b/g/n 协议：                           • 数据速率：250 Kbps
+        – 支持 20 MHz 和 40 MHz 频宽                         • 支持 Thread 1.3
+        – MCS0 ~MCS7                                    • 支持 Zigbee 3.0
+        – 无线多媒体 (WMM)
+                                                      CPU 和存储
+        – 帧聚合 (TX/RX A-MPDU, TX/RX A-MSDU)
+
+        – 立即块确认 (Immediate Block ACK)                   • 高性能 RISC-V 处理器：
+
+        – 分片和重组 (Fragmentation and defragmen-                  – 时钟频率：最高 160 MHz
+          tation)                                              – 四级流水线架构
+        – 传输机会 (Transmission opportunity, TXOP)                – CoreMark® 得分：496.66 CoreMark；3.10
+        – Beacon 自动监测（硬件 TSF）                                   CoreMark/MHz (160 MHz)
+
+        – 4 个虚拟 Wi-Fi 接口                                • 低功耗 RISC-V 处理器：
+
+        – 同 时 支 持 基 础 结 构 型 网 络 (Infrastructure                – 时钟频率：最高 20 MHz
+          BSS) Station 模式、SoftAP 模式、Station +                  – 二级流水线架构
+          SoftAP 模式和混杂模式
+
+
+乐鑫信息科技                                            3                   ESP32-C6 系列芯片技术规格书 v1.5
+                                           反馈文档意见
+ • 通用 DMA 控制器（简称 GDMA）
+                     ，3 个接收通道                       • 模拟信号处理：
+     和 3 个发送通道
+                                                       – 12 位 SAR ADC，多达 7 个通道
+ • L1 cache：32 KB
+                                                       – 温度传感器
+ • ROM：320 KB
+                                                    • 定时器：
+ • HP SRAM：512 KB
+                                                       – 52 位系统定时器
+ • LP SRAM：16 KB
+                                                       – 2 个 54 位通用定时器
+ • 4096 位 eFuse 存储器，用户可用的高达 1792 位
+                                                       – 3 个数字看门狗定时器
+ • 支持的 SPI 协议：SPI、Dual SPI、Quad SPI、QPI
+                                                       – 模拟看门狗定时器
+     接口在芯片封装外连接 flash 和其他 SPI 设备
+
+ • 通过 cache 加速 flash 访问                            功耗管理
+ • 支持 flash 在线编程 (ICP)
+                                                    • 通过选择时钟频率、占空比、Wi-Fi 工作模式和单
+                                                     独控制内部器件的电源，实现精准电源控制
+外设
+                                                    • 针 对 典 型 场 景 设 计 的 四 种 功 耗 模 式：Active、
+ • 30 个 GPIO 口 (QFN40) 或 22 个 GPIO 口 (QFN32)         Modem-sleep、Light-sleep、Deep-sleep
+
+      – 5 个作为 strapping 管脚                          • Deep-sleep 模式下功耗低至 7 µA
+
+      – 6 个用于连接 封装外 flash                           • Deep-sleep 模式下低功耗存储器 (LP memory) 仍
+                                                     保持工作
+ • 通讯接口：
+
+      – 2 个 UART                                   安全机制
+      – 低功耗 UART (LP UART)
+                                                    • 安全启动 - 内部和外部存储器的权限控制
+      – 2 个 SPI 接口用于连接 flash
+                                                    • Flash 加密 - 加密和解密存储器
+      – 通用 SPI 接口
+                                                    • 可信执行环境控制器 (TEE) 和访问（地址）权限管
+      – I2C                                          理 (APM)
+      – 低功耗 I2C (LP I2C)                            • 加密硬件加速器：
+      – I2S                                            – AES-128/256 (FIPS PUB 197)
+      – 脉冲计数控制器                                        – ECC
+      – USB 串口/JTAG 控制器                                – HMAC
+                ®
+      – 2 个 TWAI 控制器，兼容 ISO11898-1（CAN                 – RSA
+        规范 2.0）
+                                                       – SHA (FIPS PUB 180-4)
+      – SDIO 从机控制器
+                                                       – RSA 数字签名外设
+      – LED PWM 控制器，多达 6 个通道
+                                                    • 片外存储器加密与解密 (XTS_AES)
+      – 电机控制脉宽调制器 (MCPWM)
+                                                    • 随机数生成器 (RNG)
+      – 红外遥控器 (TX/RX)
+
+      – 并行 IO 接口 (PARLIO)
+
+      – 事件任务矩阵 (ETM)
+
+
+
+乐鑫信息科技                                         4                ESP32-C6 系列芯片技术规格书 v1.5
+                                       反馈文档意见
+RF 模块                               • 802.11b 传输功率高达 +21 dBm
+
+                                    • 802.11ax 传输功率高达 +19.5 dBm
+ • 天线开关、射频巴伦 (balun)、功率放大器、低噪
+   声放大器                             • 低功耗蓝牙接收器灵敏度 (125 Kbps) 高达 -106
+                                     dBm
+
+
+
+应用
+低功耗芯片 ESP32-C6 专为物联网 (IoT) 设备而设计，应用领域包括：
+
+ • 智能家居                             • POS 机
+
+ • 工业自动化                            • 服务机器人
+
+ • 医疗保健                             • 音频设备
+
+ • 消费电子产品                           • 通用低功耗 IoT 传感器集线器
+
+ • 智慧农业                             • 通用低功耗 IoT 数据记录器
+
+
+
+
+乐鑫信息科技                          5             ESP32-C6 系列芯片技术规格书 v1.5
+                            反馈文档意见
+目录
+
+
+
+    说明：
+
+      点击链接或扫描二维码确保您使用的是最新版本的文档：
+      https://www.espressif.com/documentation/esp32-c6_datasheet_cn.pdf
+
+
+
+
+目录
+
+产品概述                                                                                            2
+产品特性                                                                                            3
+应用                                                                                              5
+
+
+1        ESP32-C6 系列型号对比                                                                       13
+1.1      命名规则                                                                                  13
+1.2      型号对比                                                                                  13
+1.3      芯片版本                                                                                  13
+
+
+2        管脚                                                                                    14
+2.1      管脚布局                                                                                  14
+2.2      管脚概述                                                                                  16
+2.3      IO 管脚                                                                                 19
+         2.3.1   IO MUX 功能                                                                     19
+         2.3.2   LP IO MUX 功能                                                                  22
+         2.3.3   模拟功能                                                                          23
+         2.3.4   GPIO 和 LP GPIO 的限制                                                            24
+         2.3.5   外设管脚分配                                                                        25
+2.4      模拟管脚                                                                                  28
+2.5      电源                                                                                    29
+         2.5.1   电源管脚                                                                          29
+         2.5.2   电源管理                                                                          29
+         2.5.3   芯片上电和复位                                                                       30
+2.6      芯片与 flash 的管脚对应关系                                                                     31
+
+
+3        启动配置项                                                                                 32
+3.1      芯片启动模式控制                                                                              33
+3.2      SDIO 输入采样沿和输出驱动沿控制                                                                    33
+3.3      ROM 日志打印控制                                                                            34
+3.4      JTAG 信号源控制                                                                            35
+
+
+4        功能描述                                                                                  36
+4.1      系统                                                                                    36
+         4.1.1   微处理器和主机                                                                       36
+                 4.1.1.1   高性能处理器                                                              36
+                 4.1.1.2   RISC-V 追踪编码器                                                        36
+
+
+乐鑫信息科技                                                   6                ESP32-C6 系列芯片技术规格书 v1.5
+                                                    反馈文档意见
+目录
+
+
+              4.1.1.3   低功耗处理器                                          37
+              4.1.1.4   GDMA 控制器                                        37
+      4.1.2   存储器组织结构                                                   38
+              4.1.2.1   内部存储器                                           38
+              4.1.2.2   外部存储器                                           39
+              4.1.2.3   eFuse 控制器                                       39
+      4.1.3   系统组件                                                      39
+              4.1.3.1   IO MUX 和 GPIO 交换矩阵                              39
+              4.1.3.2   复位                                              40
+              4.1.3.3   时钟                                              40
+              4.1.3.4   中断矩阵                                            41
+              4.1.3.5   事件任务矩阵                                          41
+              4.1.3.6   系统定时器                                           41
+              4.1.3.7   电源管理单元                                          42
+              4.1.3.8   定时器组                                            42
+              4.1.3.9   看门狗定时器                                          43
+              4.1.3.10 权限控制                                             43
+              4.1.3.11 系统寄存器                                            43
+              4.1.3.12 辅助调试                                             44
+      4.1.4   加密和安全组件                                                   44
+              4.1.4.1   AES 加速器                                         44
+              4.1.4.2   ECC 加速器                                         45
+              4.1.4.3   HMAC 加速器                                        45
+              4.1.4.4   RSA 加速器                                         45
+              4.1.4.5   SHA 加速器                                         46
+              4.1.4.6   RSA 数字签名外设                                      46
+              4.1.4.7   片外存储器加密与解密                                      46
+              4.1.4.8   随机数生成器                                          46
+4.2   外设                                                                48
+      4.2.1   通讯接口                                                      48
+              4.2.1.1   UART 控制器                                        48
+              4.2.1.2   SPI 控制器                                         48
+              4.2.1.3   I2C 控制器                                         49
+              4.2.1.4   I2S 控制器                                         50
+              4.2.1.5   脉冲计数控制器                                         50
+              4.2.1.6   USB 串口/JTAG 控制器                                 51
+              4.2.1.7   双线汽车接口                                          51
+              4.2.1.8   SDIO 从机控制器                                      52
+              4.2.1.9   LED PWM 控制器                                     52
+              4.2.1.10 电机控制脉宽调制器                                        53
+              4.2.1.11 红外遥控                                             54
+              4.2.1.12 并行 IO 控制器                                        54
+      4.2.2   模拟信号处理                                                    55
+              4.2.2.1   SAR ADC                                         55
+              4.2.2.2   温度传感器                                           55
+4.3   无线通信                                                              57
+
+
+乐鑫信息科技                                       7     ESP32-C6 系列芯片技术规格书 v1.5
+                                          反馈文档意见
+目录
+
+
+      4.3.1   无线电                                                     57
+              4.3.1.1    2.4 GHz 接收器                                  57
+              4.3.1.2    2.4 GHz 发射器                                  57
+              4.3.1.3    时钟生成器                                        57
+      4.3.2   Wi-Fi                                                   57
+              4.3.2.1    Wi-Fi 无线电和基带                                 58
+              4.3.2.2    Wi-Fi MAC                                    58
+              4.3.2.3    网络特性                                         59
+      4.3.3   蓝牙 LE                                                   59
+              4.3.3.1    低功耗蓝牙物理层                                     59
+              4.3.3.2    低功耗蓝牙链路控制器                                   60
+      4.3.4   802.15.4                                                60
+              4.3.4.1    802.15.4 物理层                                 60
+              4.3.4.2    802.15.4 MAC                                 61
+
+5     电气特性                                                            62
+5.1   绝对最大额定值                                                         62
+5.2   建议工作条件                                                          62
+5.3   VDD_SPI 输出特性                                                    63
+5.4   直流电气特性 (3.3 V, 25 °C)                                           63
+5.5   ADC 特性                                                          63
+5.6   功耗特性                                                            64
+      5.6.1   Active 模式下的功耗                                           64
+      5.6.2   其他功耗模式下的功耗                                              65
+5.7   存储器规格                                                           66
+5.8   可靠性                                                             66
+
+
+6     射频特性                                                            68
+6.1   Wi-Fi 射频                                                        68
+      6.1.1   Wi-Fi 射频发射器 (TX) 特性                                     68
+      6.1.2   Wi-Fi 射频接收器 (RX) 特性                                     69
+6.2   低功耗蓝牙射频                                                         71
+      6.2.1   低功耗蓝牙射频发射器 (TX) 特性                                      71
+      6.2.2   低功耗蓝牙射频接收器 (RX) 特性                                      72
+6.3   802.15.4 射频                                                     74
+      6.3.1   802.15.4 射频发射器 (TX) 特性                                  75
+      6.3.2   802.15.4 射频接收器 (RX) 特性                                  75
+
+
+7     封装                                                              76
+
+
+ESP32-C6 管脚总览                                                         77
+
+
+技术规格书版本号管理                                                            79
+
+
+词汇表                                                                   80
+
+
+
+
+乐鑫信息科技                                    8      ESP32-C6 系列芯片技术规格书 v1.5
+                                        反馈文档意见
+目录
+
+
+
+相关文档和资源                                 81
+
+
+修订历史                                    82
+
+
+
+
+乐鑫信息科技      9      ESP32-C6 系列芯片技术规格书 v1.5
+          反馈文档意见
+表格
+
+
+
+表格
+ 1-1 ESP32-C6 系列芯片对比                                                 13
+ 2-1 QFN40 封装管脚概述                                                    16
+ 2-2 QFN32 封装管脚概述                                                    17
+ 2-3 通过 IO MUX 连接的外设信号                                               19
+ 2-4 QFN40 封装 IO MUX 管脚功能                                            20
+ 2-5 QFN32 封装 IO MUX 管脚功能                                            20
+ 2-6 通过 LP IO MUX 连接的 LP 外设信号                                        22
+ 2-7 LP IO MUX 功能                                                    22
+ 2-8 连接模拟功能的模拟信号                                                     23
+ 2-9 模拟功能                                                            23
+ 2-10 QFN40 封装外设管脚分配                                                 26
+ 2-11 QFN32 封装外设管脚分配                                                 27
+ 2-12 模拟管脚                                                           28
+ 2-13 电源管脚                                                           29
+ 2-14 电压稳压器                                                          29
+ 2-15 上电和复位时序参数说明                                                    30
+ 2-16 QFN40 封装芯片与 flash 的管脚对应关系                                      31
+ 3-1 Strapping 管脚的默认配置                                               32
+ 3-2 Strapping 管脚的时序参数说明                                             33
+ 3-3 芯片启动模式控制                                                        33
+ 3-4 SDIO 输入采样沿/输出驱动沿控制                                              34
+ 3-5 UART0 ROM 日志打印控制                                                34
+ 3-6 USB 串口/JTAG ROM 日志打印控制                                          34
+ 3-7 JTAG 信号源控制                                                      35
+ 5-1 绝对最大额定值                                                         62
+ 5-2 建议工作条件                                                          62
+ 5-3 VDD_SPI 内部和输出特性                                                 63
+ 5-4 直流电气特性 (3.3 V, 25 °C)                                           63
+ 5-5 ADC 特性                                                          64
+ 5-6 ADC 校准结果                                                        64
+ 5-7 Active 模式下 Wi-Fi (2.4 GHz) 功耗特性                                 64
+ 5-8 Active 模式下低功耗蓝牙功耗特性                                             65
+ 5-9 Active 模式下 802.15.4 功耗特性                                        65
+ 5-10 Modem-sleep 模式下的功耗                                             65
+ 5-11 低功耗模式下的功耗                                                      65
+ 5-12 Flash 规格                                                       66
+ 5-13 可靠性认证                                                          66
+ 6-1 Wi-Fi 射频规格                                                      68
+ 6-2 频谱模板和 EVM 符合 802.11 标准时的发射功率                                    68
+ 6-3 发射 EVM 测试1                                                      68
+ 6-4 接收灵敏度                                                           69
+ 6-5 最大接收电平                                                          70
+ 6-6 接收邻道抑制                                                          70
+
+
+
+乐鑫信息科技                                   10     ESP32-C6 系列芯片技术规格书 v1.5
+                                       反馈文档意见
+表格
+
+
+ 6-7 低功耗蓝牙射频规格                                                  71
+ 6-8 低功耗蓝牙 - 发射器特性 - 1 Mbps                                     71
+ 6-9 低功耗蓝牙 - 发射器特性 - 2 Mbps                                     71
+ 6-10 低功耗蓝牙 - 发射器特性 - 125 Kbps                                  72
+ 6-11 低功耗蓝牙 - 发射器特性 - 500 Kbps                                  72
+ 6-12 低功耗蓝牙 - 接收器特性 - 1 Mbps                                    72
+ 6-13 低功耗蓝牙 - 接收器特性 - 2 Mbps                                    73
+ 6-14 低功耗蓝牙 - 接收器特性 - 125 Kbps                                  74
+ 6-15 低功耗蓝牙 - 接收器特性 - 500 Kbps                                  74
+ 6-16 802.15.4 射频规格                                             74
+ 6-17 802.15.4 发射器特性 - 250 Kbps                                 75
+ 6-18 802.15.4 接收器特性 - 250 Kbps                                 75
+ 7-1 QFN40 封装管脚总览                                               77
+ 7-2 QFN32 封装管脚总览                                               78
+
+
+
+
+乐鑫信息科技                              11     ESP32-C6 系列芯片技术规格书 v1.5
+                                  反馈文档意见
+插图
+
+
+
+插图
+ 1-1 ESP32-C6 系列芯片命名规则                                    13
+ 2-1 ESP32-C6 管脚布局（QFN40 封装，俯视图）                          14
+ 2-2 ESP32-C6 管脚布局（QFN32 封装，俯视图）                          15
+ 2-3 ESP32-C6 电源管理                                        30
+ 2-4 上电和复位时序参数图                                           30
+ 3-1 Strapping 管脚的时序参数图                                   33
+ 4-1 地址映射结构                                               38
+ 7-1 QFN40 (5×5 mm) 封装                                    76
+ 7-2 QFN32 (5×5 mm) 封装                                    76
+
+
+
+
+乐鑫信息科技                         12    ESP32-C6 系列芯片技术规格书 v1.5
+                            反馈文档意见
+1 ESP32-C6 系列型号对比
+
+
+
+1 ESP32-C6 系列型号对比
+
+1.1 命名规则
+
+           ESP32-C6               F       H/N            x
+
+
+
+
+                                                                    flash ⼤⼩ (MB)
+
+
+                                                                    flash 温度
+                                                                    H：⾼温
+                                                                    N：正常
+
+                                                                    封装内 flash
+
+                                                                    芯⽚系列
+
+                            图 1-1. ESP32-C6 系列芯片命名规则
+
+
+
+1.2 型号对比
+
+                              表 1-1. ESP32-C6 系列芯片对比
+
+     物料编号 1           封装内 Flash            环境温度 2                 封装             芯片版本
+     ESP32-C6           —3                –40 ∼ 105 °C       QFN40 (5×5 mm)    v0.0/v0.1/v0.2
+     ESP32-C6FH4   4 MB (Quad SPI) 4, 5   –40 ∼ 105 °C       QFN32 (5×5 mm)    v0.0/v0.1/v0.2
+     ESP32-C6FH8   8 MB (Quad SPI) 4, 5   –40 ∼ 105 °C       QFN32 (5×5 mm)    v0.0/v0.1/v0.2
+     1 更多关于芯片丝印和包装的信息，请参考章节 7 封装。
+     2 环境温度指乐鑫芯片外部的推荐环境温度。
+     3 支持在芯片封装外连接 flash，详见章节 4.1.2.2 外部存储器。
+     4 更多关于 SPI 模式的信息，请参考章节 2.6 芯片与 flash 的管脚对应关系。
+     5 更多关于封装内 flash 的信息，详见章节 4.1.2.1 内部存储器。默认情况下，封装内 flash 支
+      持的最大时钟频率为 80 MHz，且不支持自动暂停功能。如需使用 120 MHz 的 flash 时钟频
+      率或自动暂停功能，请联系我们。
+
+
+
+1.3 芯片版本
+如表 1-1 ESP32-C6 系列芯片对比 所示，ESP32-C6 有多个芯片版本投入市场，并使用相同的物料编号。
+
+关于芯片版本的识别方式、支持特定芯片版本的 ESP-IDF 版本和每个芯片版本修复的错误，请参考
+《ESP32-C6 系列芯片勘误表》。
+
+
+
+乐鑫信息科技                                       13                   ESP32-C6 系列芯片技术规格书 v1.5
+                                          反馈文档意见
+2   管脚
+
+
+
+2 管脚
+
+2.1 管脚布局
+
+
+
+
+                                                                             36 SDIO_DATA3
+
+
+                                                                                             35 SDIO_DATA2
+
+
+                                                                                                             34 SDIO_DATA1
+
+
+                                                                                                                              33 SDIO_DATA0
+
+
+
+
+                                                                                                                                                            31 SDIO_CMD
+                                                                                                                                              32 SDIO_CLK
+                                                    38 XTAL_N
+                                        39 XTAL_P
+                             40 VDDA2
+
+
+
+
+                                                                 37 VDDA1
+               ANT    1                                                                                                                                                   30 U0RXD
+
+
+           VDDA3P3    2                                                                                                                                                   29 U0TXD
+
+
+           VDDA3P3    3                                                                                                                                                   28 VDDPST2
+
+
+           CHIP_PU    4                                                                                                                                                   27 GPIO15
+
+
+           VDDPST1    5                                                                                                                                                   26 SPID
+
+
+         XTAL_32K_P   6                                                                                                                                                   25 SPICLK
+
+
+         XTAL_32K_N   7
+                                                                 ESP32-C6                                                                                                 24 SPIHD
+
+
+             GPIO2    8                                                                                                                                                   23 VDD_SPI
+
+
+             GPIO3    9                                                                                                                                                   22 SPIWP
+
+                                                                                                                                                       41 GND
+              MTMS 10                                                                                                                                                     21 SPIQ
+                             MTDI 11
+
+
+                                        MTCK 12
+
+
+                                                    MTDO 13
+
+
+                                                                 GPIO8 14
+
+
+                                                                             GPIO9 15
+
+
+                                                                                             GPIO10 16
+
+
+                                                                                                             GPIO11 17
+
+
+                                                                                                                              GPIO12 18
+
+
+                                                                                                                                              GPIO13 19
+
+
+                                                                                                                                                            SPICS0 20
+
+
+
+
+                          图 2-1. ESP32-C6 管脚布局（QFN40 封装，俯视图）
+
+
+
+
+乐鑫信息科技                                                                  14                                                   ESP32-C6 系列芯片技术规格书 v1.5
+                                                                反馈文档意见
+2   管脚
+
+
+
+
+                                                                                28 SDIO_DATA3
+
+
+
+                                                                                                27 SDIO_DATA2
+
+
+
+                                                                                                                26 SDIO_DATA1
+
+
+
+                                                                                                                                    25 SDIO_DATA0
+                                                    30 XTAL_N
+                                        31 XTAL_P
+                             32 VDDA2
+
+
+
+
+                                                                     29 VDDA1
+               ANT    1                                                                                                                             24 SDIO_CLK
+
+
+
+           VDDA3P3    2                                                                                                                             23 SDIO_CMD
+
+
+
+           VDDA3P3    3                                                                                                                             22 U0RXD
+
+
+
+           CHIP_PU    4                                                                                                                             21 U0TXD
+
+
+
+           VDDPST1    5                                                                                                                             20 VDDPST2
+
+
+
+         XTAL_32K_P   6                                ESP32-C6                                                                                     19 GPIO15
+
+
+
+         XTAL_32K_N   7                                                                                                                             18 GPIO14
+
+
+                                                                                                                                33 GND
+             GPIO2    8                                                                                                                             17 GPIO13
+                                        MTMS 10
+
+
+
+                                                    MTDI 11
+
+
+
+                                                                     MTCK 12
+
+
+
+                                                                                MTDO 13
+
+
+
+                                                                                                GPIO8 14
+
+
+
+                                                                                                                GPIO9 15
+
+
+
+                                                                                                                                    GPIO12 16
+                             9
+                             GPIO3
+
+
+
+
+                          图 2-2. ESP32-C6 管脚布局（QFN32 封装，俯视图）
+
+
+
+
+乐鑫信息科技                                                          15                                         ESP32-C6 系列芯片技术规格书 v1.5
+                                                    反馈文档意见
+2   管脚
+
+
+
+2.2 管脚概述
+ESP32-C6 芯片集成了多个需要与外界通讯的外设。由于芯片封装尺寸小、管脚数量有限，传送所有输入输出信
+号的唯一方法是管脚多路复用。管脚多路复用由软件可编程的寄存器控制（详见 《ESP32-C6 技术参考手册》
+> 章节 IO MUX 和 GPIO 交换矩阵）。
+
+总体而言，ESP32-C6 芯片的管脚可分为以下几类：
+
+    • IO 管脚，具有以下预设功能：
+
+         – 每个 IO 管脚都预设了 IO MUX 功能 – 见表 2-4 QFN40 封装 IO MUX 管脚功能 或表 2-5 QFN32 封装
+          IO MUX 管脚功能
+
+         – 部分 IO 管脚预设了 LP IO MUX 功能 – 见表 2-7 LP IO MUX 功能
+
+         – 部分 IO 管脚预设了模拟功能 – 见表 2-9 模拟功能
+
+     预设功能即每个 IO 管脚直接连接至一组特定的片上外设信号。运行时，可通过映射寄存器配置连接管脚
+     的外设信号。
+
+    • 模拟管脚，专用于模拟功能 – 见表 2-12 模拟管脚
+
+    • 电源管脚，为芯片组件和非电源管脚供电 – 见表 2-13 电源管脚
+
+
+表 2-1 QFN40 封装管脚概述 和表 2-2 QFN32 封装管脚概述 简要介绍了所有管脚。更多信息，详见下文相应章
+节，或参考ESP32-C6 管脚总览。
+
+                                表 2-1. QFN40 封装管脚概述
+
+     管脚      管脚           管脚   供电                   管脚配置 4-6                   管脚功能 1
+     序号      名称           类型   管脚 2, 3    复位时           复位后           IO MUX   LP IO MUX   模拟
+     1       ANT          模拟
+     2       VDDA3P3      电源
+     3       VDDA3P3      电源
+     4       CHIP_PU      模拟   VDDPST1
+     5       VDDPST1      电源
+     6       XTAL_32K_P   IO   VDDPST1                                IO MUX   LP IO MUX   模拟
+     7       XTAL_32K_N   IO   VDDPST1                                IO MUX   LP IO MUX   模拟
+     8       GPIO2        IO   VDDPST1    IE            IE            IO MUX   LP IO MUX   模拟
+     9       GPIO3        IO   VDDPST1    IE            IE            IO MUX   LP IO MUX   模拟
+     10      MTMS         IO   VDDPST1    IE            IE            IO MUX   LP IO MUX   模拟
+     11      MTDI         IO   VDDPST1    IE            IE            IO MUX   LP IO MUX   模拟
+     12      MTCK         IO   VDDPST1                  IE, WPU 5     IO MUX   LP IO MUX   模拟
+     13      MTDO         IO   VDDPST1                  IE            IO MUX   LP IO MUX
+     14      GPIO8        IO   VDDPST2    IE            IE            IO MUX
+     15      GPIO9        IO   VDDPST2    IE, WPU       IE, WPU       IO MUX
+     16      GPIO10       IO   VDDPST2                  IE            IO MUX
+     17      GPIO11       IO   VDDPST2                  IE            IO MUX
+     18      GPIO12       IO   VDDPST2                  IE            IO MUX               模拟
+     19      GPIO13       IO   VDDPST2    USB_PU        IE, USB_PU    IO MUX               模拟
+     20      SPICS0       IO   VDD_SPI    WPU           IE, WPU       IO MUX
+     21      SPIQ         IO   VDD_SPI    WPU           IE, WPU       IO MUX
+                                                                                           见下页
+
+
+
+乐鑫信息科技                                         16                    ESP32-C6 系列芯片技术规格书 v1.5
+                                         反馈文档意见
+2   管脚
+
+
+                                            表 2-1 – 接上页
+     管脚    管脚            管脚       供电                    管脚配置 4-6                  管脚功能 1
+     序号    名称            类型       管脚 2, 3     复位时           复位后          IO MUX    LP IO MUX   模拟
+     22    SPIWP          IO      VDD_SPI     WPU           IE, WPU      IO MUX
+     23    VDD_SPI       电源/IO    —                                      IO MUX                模拟
+     24    SPIHD          IO      VDD_SPI     WPU           IE, WPU      IO MUX
+     25    SPICLK         IO      VDD_SPI     WPU           IE, WPU      IO MUX
+     26    SPID           IO      VDD_SPI     WPU           IE, WPU      IO MUX
+     27    GPIO15         IO      VDDPST2     IE            IE           IO MUX
+     28    VDDPST2       电源
+     29    U0TXD          IO      VDDPST2                   WPU 6        IO MUX
+     30    U0RXD          IO      VDDPST2                   IE, WPU      IO MUX
+     31    SDIO_CMD       IO      VDDPST2     WPU           IE           IO MUX
+     32    SDIO_CLK       IO      VDDPST2     WPU           IE           IO MUX
+     33    SDIO_DATA0     IO      VDDPST2     WPU           IE           IO MUX
+     34    SDIO_DATA1     IO      VDDPST2     WPU           IE           IO MUX
+     35    SDIO_DATA2     IO      VDDPST2     WPU           IE           IO MUX
+     36    SDIO_DATA3     IO      VDDPST2     WPU           IE           IO MUX
+     37    VDDA1         电源
+     38    XTAL_N        模拟
+     39    XTAL_P        模拟
+     40    VDDA2         电源
+     41    GND           电源
+
+
+
+                                  表 2-2. QFN32 封装管脚概述
+
+      管脚    管脚           管脚      供电                 管脚配置 4-6                      管脚功能 1
+      序号    名称           类型      管脚 2, 3     复位时           复位后          IO MUX    LP IO MUX    模拟
+      1     ANT          模拟
+      2     VDDA3P3      电源
+      3     VDDA3P3      电源
+      4     CHIP_PU      模拟      VDDPST1
+      5     VDDPST1      电源
+      6     XTAL_32K_P    IO     VDDPST1                                IO MUX    LP IO MUX    模拟
+      7     XTAL_32K_N    IO     VDDPST1                                IO MUX    LP IO MUX    模拟
+      8     GPIO2         IO     VDDPST1     IE            IE           IO MUX    LP IO MUX    模拟
+      9     GPIO3         IO     VDDPST1     IE            IE           IO MUX    LP IO MUX    模拟
+      10    MTMS          IO     VDDPST1     IE            IE           IO MUX    LP IO MUX    模拟
+      11    MTDI          IO     VDDPST1     IE            IE           IO MUX    LP IO MUX    模拟
+      12    MTCK          IO     VDDPST1                   IE, WPU 5    IO MUX    LP IO MUX    模拟
+      13    MTDO          IO     VDDPST1                   IE           IO MUX    LP IO MUX
+      14    GPIO8         IO     VDDPST2     IE            IE           IO MUX
+      15    GPIO9         IO     VDDPST2     IE, WPU       IE, WPU      IO MUX
+      16    GPIO12        IO     VDDPST2                   IE           IO MUX                 模拟
+      17    GPIO13        IO     VDDPST2     USB_PU        IE, USB_PU   IO MUX                 模拟
+      18    GPIO14        IO     VDDPST2                   IE           IO MUX
+      19    GPIO15        IO     VDDPST2     IE            IE           IO MUX
+                                                                                              见下页
+
+
+
+乐鑫信息科技                                             17                   ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+2   管脚
+
+
+                                               表 2-2 – 接上页
+        管脚     管脚               管脚   供电               管脚配置 4-6               管脚功能 1
+        序号     名称               类型   管脚 2, 3    复位时       复位后       IO MUX   LP IO MUX   模拟
+        20     VDDPST2          电源
+        21     U0TXD            IO   VDDPST2              WPU 6     IO MUX
+        22     U0RXD            IO   VDDPST2              IE, WPU   IO MUX
+        23     SDIO_CMD         IO   VDDPST2    WPU       IE        IO MUX
+        24     SDIO_CLK         IO   VDDPST2    WPU       IE        IO MUX
+        25     SDIO_DATA0       IO   VDDPST2    WPU       IE        IO MUX
+        26     SDIO_DATA1       IO   VDDPST2    WPU       IE        IO MUX
+        27     SDIO_DATA2       IO   VDDPST2    WPU       IE        IO MUX
+        28     SDIO_DATA3       IO   VDDPST2    WPU       IE        IO MUX
+        29     VDDA1            电源
+        30     XTAL_N           模拟
+        31     XTAL_P           模拟
+        32     VDDA2            电源
+        33     GND              电源
+
+    1. 加粗功能为默认启动模式下管脚的默认功能，详见章节 3.1 芯片启动模式控制。
+
+    2. 供电管脚一栏，由 VDD_SPI 供电的管脚：
+         • 电源实际来自给 VDD_SPI 供电的内部电源轨，详见章节 2.5.2 电源管理。
+
+    3. 除 GPIO12、GPIO13 的管脚默认驱动电流为 40 mA，其余管脚的默认驱动电流均为 20 mA。
+
+    4. 管脚配置一栏为复位时和复位后预设配置缩写：
+         • IE – 输入使能
+         • WPU – 内部弱上拉电阻使能
+         • WPD – 内部弱下拉电阻使能
+         • USB_PU – USB 上拉电阻使能
+             – USB 管脚
+                    （GPIO12 和 GPIO13）
+                                    默认开启 USB 功能，
+                                               此时管脚是否上拉由 USB 上拉电阻决定。
+                                                                   USB 上拉电阻由 USB_SERIAL_JTAG_DP/
+               DM_PULLUP 控制，具体阻值可通过 USB_SERIAL_JTAG_
+               PULLUP_VALUE 位控制，详见 《ESP32-C6 技术参考手册》 > 章节 USB 串口/JTAG 控制器。
+             – USB 管脚关闭 USB 功能时，用作普通 GPIO。复位时 GPIO13 管脚内部弱上下拉电阻默认禁用。复位后 GPIO13 管脚内部
+               弱上拉电阻默认使能。管脚内部上下拉电阻可通过 IO_MUX_FUN_WPU/WPD 配置，详见 《ESP32-C6 技术参考手册》
+               > 章节 IO MUX 和 GPIO 交换矩阵。
+
+    5. EFUSE_DIS_PAD_JTAG 的值为
+         • 0 - 初始默认值，输入使能，内部弱上拉电阻使能 (IE & WPU)
+         • 1 - 输入使能 (IE)
+
+    6. 输出使能
+
+
+
+
+乐鑫信息科技                                             18               ESP32-C6 系列芯片技术规格书 v1.5
+                                               反馈文档意见
+2   管脚
+
+
+
+2.3 IO 管脚
+2.3.1 IO MUX 功能
+IO MUX 能让一个输入/输出管脚连接多个输入/输出信号。ESP32-C6 的每个 IO 管脚可在表 2-4 QFN40 封装 IO
+MUX 管脚功能 和表 2-5 QFN32 封装 IO MUX 管脚功能 列出的三个信号（IO MUX 功能，即 F0-F2）中选择，连
+接任意一个。
+
+三个信号中：
+
+    • 部分源自 GPIO 交换矩阵（GPIO0、GPIO1 等）。GPIO 交换矩阵包含内部信号传输线路，用于映射信号，
+     能令管脚连接几乎任一外设信号。这种映射虽然灵活，但可能影响传输信号的速度，造成延迟。如何通过
+     GPIO 交换矩阵连接外设信号，详见 《ESP32-C6 技术参考手册》 > 章节 IO MUX 和 GPIO 交换矩阵。
+
+    • 部分直接源自特定外设（U0TXD、MTCK 等）
+                             ，包括 UART0、JTAG、SPI0/1、SPI2 和 SDIO - 详见表 2-3
+     通过 IO MUX 连接的外设信号。
+
+                                 表 2-3. 通过 IO MUX 连接的外设信号
+
+     管脚功能         信号                                描述
+     U0TXD        发送数据 (Transmit)
+                                                    UART0 接口
+     U0RXD        接收数据 (Receive)
+     MTCK         测试时钟 (Test clock)
+     MTDO         测试数据输出 (Test Data Out)
+                                                    用于调试功能的 JTAG 接口
+     MTDI         测试数据输入 (Test Data In)
+     MTMS         测试模式选择 (Test Mode Select)
+     SPIQ         主机输入从机输出 (Master in, slave out)
+     SPID         主机输出从机输入 (Master out, slave in)
+                                                    3.3 V SPI0/1 接口，通过 SPI 总线连接封装内或封
+     SPIHD        暂停 (Hold)
+                                                    装外 flash。支持单线、双线、四线 SPI 模式。详见
+     SPIWP        写保护 (Write protect)
+                                                    章节 2.6 芯片与 flash 的管脚对应关系
+     SPICLK       时钟 (Clock)
+     SPICS0       片选 (Chip select)
+     FSPIQ        主机输入从机输出 (Master in, slave out)
+     FSPID        主机输出从机输入 (Master out, slave in)
+     FSPIHD       暂停 (Hold)                         用于快速 SPI 传输的 SPI2 主接口。支持单线、双
+     FSPIWP       写保护 (Write protect)               线、四线 SPI 模式
+     FSPICLK      时钟 (Clock)
+     FSPICS…      片选 (Chip select)
+     SDIO_CMD     命令 (Command)
+     SDIO_CLK     时钟 (Clock)                        SDIO 接口
+     SDIO_DATA…   数据 (Data)
+
+
+
+
+表 2-4 QFN40 封装 IO MUX 管脚功能 和表 2-5 QFN32 封装 IO MUX 管脚功能 列出了管脚的 IO MUX 功能。
+
+
+
+
+乐鑫信息科技                                        19               ESP32-C6 系列芯片技术规格书 v1.5
+                                           反馈文档意见
+2   管脚
+
+
+                           表 2-4. QFN40 封装 IO MUX 管脚功能
+
+         管脚     IO MUX /                          IO MUX 功能 1, 2, 3
+                GPIO 名称
+         序号     2          F0           类型 3         F1        类型      F2        类型
+
+         6      GPIO0      GPIO0        I/O/T        GPIO0     I/O/T
+         7      GPIO1      GPIO1        I/O/T        GPIO1     I/O/T
+         8      GPIO2      GPIO2        I/O/T        GPIO2     I/O/T   FSPIQ     I1/O/T
+         9      GPIO3      GPIO3        I/O/T        GPIO3     I/O/T
+         10     GPIO4      MTMS         I1           GPIO4     I/O/T   FSPIHD    I1/O/T
+         11     GPIO5      MTDI         I1           GPIO5     I/O/T   FSPIWP    I1/O/T
+         12     GPIO6      MTCK         I1           GPIO6     I/O/T   FSPICLK   I1/O/T
+         13     GPIO7      MTDO         O/T          GPIO7     I/O/T   FSPID     I1/O/T
+         14     GPIO8      GPIO8        I/O/T        GPIO8     I/O/T
+         15     GPIO9      GPIO9        I/O/T        GPIO9     I/O/T
+         16     GPIO10     GPIO10       I/O/T        GPIO10    I/O/T
+         17     GPIO11     GPIO11       I/O/T        GPIO11    I/O/T
+         18     GPIO12     GPIO12       I/O/T        GPIO12    I/O/T
+         19     GPIO13     GPIO13       I/O/T        GPIO13    I/O/T
+         20     GPIO24     SPICS0       O/T          GPIO24    I/O/T
+         21     GPIO25     SPIQ         I1/O/T       GPIO25    I/O/T
+         22     GPIO26     SPIWP        I1/O/T       GPIO26    I/O/T
+         23     GPIO27     GPIO27       I/O/T        GPIO27    I/O/T
+         24     GPIO28     SPIHD        I1/O/T       GPIO28    I/O/T
+         25     GPIO29     SPICLK       O/T          GPIO29    I/O/T
+         26     GPIO30     SPID         I1/O/T       GPIO30    I/O/T
+         27     GPIO15     GPIO15       I/O/T        GPIO15    I/O/T
+         29     GPIO16     U0TXD        O            GPIO16    I/O/T   FSPICS0   I1/O/T
+         30     GPIO17     U0RXD        I1           GPIO17    I/O/T   FSPICS1   O/T
+         31     GPIO18     SDIO_CMD     I1/O/T       GPIO18    I/O/T   FSPICS2   O/T
+         32     GPIO19     SDIO_CLK     I1           GPIO19    I/O/T   FSPICS3   O/T
+         33     GPIO20     SDIO_DATA0   I1/O/T       GPIO20    I/O/T   FSPICS4   O/T
+         34     GPIO21     SDIO_DATA1   I1/O/T       GPIO21    I/O/T   FSPICS5   O/T
+         35     GPIO22     SDIO_DATA2   I1/O/T       GPIO22    I/O/T
+         36     GPIO23     SDIO_DATA3   I1/O/T       GPIO23    I/O/T
+         1 加粗表示默认启动模式下的默认管脚功能，详见章节 3.1 芯片启动模式控制。
+         2 高亮 的单元格，详见章节 2.3.4 GPIO 和 LP GPIO 的限制。
+         3 每个 IO MUX 功能 (Fn，n = 0 ~ 2) 均对应一个“类型”。以下是各个“类型”的含义：
+
+              • I – 输入。O – 输出。T – 高阻。
+              • I1 – 输入；如果该管脚分配了 Fn 以外的功能，则 Fn 的输入信号恒为 1。
+              • I0 – 输入；如果该管脚分配了 Fn 以外的功能，则 Fn 的输入信号恒为 0。
+
+
+                           表 2-5. QFN32 封装 IO MUX 管脚功能
+
+         管脚     IO MUX /                          IO MUX 功能 1, 2, 3
+                GPIO 名称
+         序号     2          F0           类型 3         F1        类型      F2        类型
+
+         6      GPIO0      GPIO0        I/O/T        GPIO0     I/O/T
+         7      GPIO1      GPIO1        I/O/T        GPIO1     I/O/T
+         8      GPIO2      GPIO2        I/O/T        GPIO2     I/O/T   FSPIQ     I1/O/T
+         9      GPIO3      GPIO3        I/O/T        GPIO3     I/O/T
+                                                                                 见下页
+
+
+乐鑫信息科技                                       20                   ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+2   管脚
+
+
+                                      表 2-5 – 接上页
+         管脚     IO MUX /                           IO MUX 功能 1, 2, 3
+                GPIO 名称
+         序号     2          F0            类型 3         F1        类型      F2        类型
+
+         10     GPIO4      MTMS          I1           GPIO4     I/O/T   FSPIHD    I1/O/T
+         11     GPIO5      MTDI          I1           GPIO5     I/O/T   FSPIWP    I1/O/T
+         12     GPIO6      MTCK          I1           GPIO6     I/O/T   FSPICLK   I1/O/T
+         13     GPIO7      MTDO          O/T          GPIO7     I/O/T   FSPID     I1/O/T
+         14     GPIO8      GPIO8         I/O/T        GPIO8     I/O/T
+         15     GPIO9      GPIO9         I/O/T        GPIO9     I/O/T
+         16     GPIO12     GPIO12        I/O/T        GPIO12    I/O/T
+         17     GPIO13     GPIO13        I/O/T        GPIO13    I/O/T
+         18     GPIO14     GPIO14        I/O/T        GPIO14    I/O/T
+         19     GPIO15     GPIO15        I/O/T        GPIO15    I/O/T
+         21     GPIO16     U0TXD         O            GPIO16    I/O/T   FSPICS0   I1/O/T
+         22     GPIO17     U0RXD         I1           GPIO17    I/O/T   FSPICS1   O/T
+         23     GPIO18     SDIO_CMD      I1/O/T       GPIO18    I/O/T   FSPICS2   O/T
+         24     GPIO19     SDIO_CLK      I1           GPIO19    I/O/T   FSPICS3   O/T
+         25     GPIO20     SDIO_DATA0    I1/O/T       GPIO20    I/O/T   FSPICS4   O/T
+         26     GPIO21     SDIO_DATA1    I1/O/T       GPIO21    I/O/T   FSPICS5   O/T
+         27     GPIO22     SDIO_DATA2    I1/O/T       GPIO22    I/O/T
+         28     GPIO23     SDIO_DATA3    I1/O/T       GPIO23    I/O/T
+         1 加粗表示默认启动模式下的默认管脚功能，详见章节 3.1 芯片启动模式控制。
+         2 高亮 的单元格，详见章节 2.3.4 GPIO 和 LP GPIO 的限制。
+         3 每个 IO MUX 功能 (Fn，n = 0 ~ 2) 均对应一个“类型”。以下是各个“类型”的含义：
+
+              • I – 输入。O – 输出。T – 高阻。
+              • I1 – 输入；如果该管脚分配了 Fn 以外的功能，则 Fn 的输入信号恒为 1。
+              • I0 – 输入；如果该管脚分配了 Fn 以外的功能，则 Fn 的输入信号恒为 0。
+
+
+
+
+乐鑫信息科技                                        21                   ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+2   管脚
+
+
+
+2.3.2 LP IO MUX 功能
+芯片处于 Deep-sleep 模式时，章节 2.3.1 IO MUX 功能 介绍的 IO 管脚功能无法使用。这正是引入 LP IO MUX 的
+原因。LP IO 管脚连接 LP 系统，由 VDDPST1 供电，使用 LP IO MUX 能在 Deep-sleep 模式下让一个 LP 输入/输
+出管脚连接多个输入/输出信号。
+
+LP IO 管脚具有 LP 功能，可以
+
+    • 用作 LP GPIO （LP_GPIO0、LP_GPIO1 等）
+                                     ，连接 LP CPU
+
+    • 或者连接 LP 外设信号（LP_I2C_SDA、LP_I2C_SCL 等）- 见表 2-6 通过 LP IO MUX 连接的 LP 外设信号
+
+                            表 2-6. 通过 LP IO MUX 连接的 LP 外设信号
+
+               管脚功能               信号                                  描述
+               LP_I2C_SDA         串行数据 (Serial data)
+                                                                      LP I2C 接口
+               LP_I2C_SCL         串行时钟 (Serial clock)
+               LP_UART_RXD        接收数据 (Receive)
+               LP_UART_TXD        发送数据 (Transmit)
+               LP_UART_RTSN       请求发送 (Request to send)
+                                                                      LP UART 接口
+               LP_UART_CTSN       允许发送 (Clear to send)
+               LP_UART_DTRN       数据设置就绪 (Data set ready)
+               LP_UART_DSRN       数据终端就绪 (Data terminal ready)
+
+
+
+表 2-7 LP IO MUX 功能 列出了 LP IO 管脚的 LP IO MUX 功能。
+
+                                    表 2-7. LP IO MUX 功能
+
+                        管脚     LP IO               LP IO MUX 功能
+                        序号     名称 1, 2, 3    F0          F1
+                        6      LP_GPIO0      LP_GPIO0    LP_UART_DTRN
+                        7      LP_GPIO1      LP_GPIO1    LP_UART_DSRN
+                        8      LP_GPIO2      LP_GPIO2    LP_UART_RTSN
+                        9      LP_GPIO3      LP_GPIO3    LP_UART_CTSN
+                        10     LP_GPIO4      LP_GPIO4    LP_UART_RXD
+                        11     LP_GPIO5      LP_GPIO5    LP_UART_TXD
+                        12     LP_GPIO6      LP_GPIO6    LP_I2C_SDA
+                        13     LP_GPIO7      LP_GPIO7    LP_I2C_SCL
+                        1 加粗表示默认启动模式下的默认管脚功能，详见章节
+
+                          3.1 芯片启动模式控制。
+                        2 由于 LP IO MUX 功能通过使用 LP GPIO 编号的 LP
+
+                         GPIO 寄存器配置，此列列出的是 LP GPIO 的名称。
+                        3 高亮 的单元格，详见章节 2.3.4 GPIO 和 LP GPIO 的
+
+                            限制。
+
+
+
+
+乐鑫信息科技                                        22                  ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+2   管脚
+
+
+
+2.3.3 模拟功能
+部分 IO 管脚具有模拟功能，可用于任意功耗模式下的模拟外设（如 ADC）。模拟功能连接内部模拟信号，详见
+表 2-8 连接模拟功能的模拟信号。
+
+                                      表 2-8. 连接模拟功能的模拟信号
+
+    管脚功能         信号                                     描述
+    ADC1_CH…     ADC1 通道 … 信号                           ADC1 接口
+    XTAL_32K_N   负极性时钟信号 (Negative clock signal)        连接 ESP32-C6 无源或有源晶振的外部 32
+    XTAL_32K_P   正极性时钟信号 (Positive clock signal)        kHz 时钟输入/输出
+    USB_D-       数据 - (Data -)
+                                                        USB 串口/JTAG 功能
+    USB_D+       数据 + (Data +)
+
+
+
+表 2-9 模拟功能 列出了 IO 管脚的模拟功能。
+
+                                          表 2-9. 模拟功能
+
+                      QFN40      QFN32    模拟                  模拟功能 2
+                      管脚序号       管脚序号     IO 名称 1, 2    F0            F1
+                      6          6        GPIO0         XTAL_32K_P    ADC1_CH0
+                      7          7        GPIO1         XTAL_32K_N    ADC1_CH1
+                      8          8        GPIO2                       ADC1_CH2
+                      9          9        GPIO3                       ADC1_CH3
+                      10         10       GPIO4                       ADC1_CH4
+                      11         11       GPIO5                       ADC1_CH5
+                      12         12       GPIO6                       ADC1_CH6
+                      18         16       GPIO12        USB_D-
+                      19         17       GPIO13        USB_D+
+                      23         —        GPIO27        VDD_SPI
+                      1 加粗表示默认启动模式下的默认管脚功能，详见章节 3.1 芯片启动模
+
+                       式控制。
+                      2 高亮 的单元格，详见章节 2.3.4 GPIO 和 LP GPIO 的限制。
+
+
+
+
+乐鑫信息科技                                             23                ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+2   管脚
+
+
+
+2.3.4 GPIO 和 LP GPIO 的限制
+ESP32-C6 的所有 IO 管脚都有 GPIO 功能，部分还具有 LP GPIO 功能。不过，这些 IO 管脚是多功能管脚，可
+以根据需求配置不同的功能，也有一些使用限制，需要特别注意。
+
+本章节的表格中，部分管脚功能有 红色 或 黄色 高亮标记，是重要的管脚功能，所属 IO 管脚用作 GPIO / GPIO
+时需谨慎：
+
+    • IO 管脚 – 用于与 flash 通讯，不建议作其他用途。更多信息，详见章节 2.6 芯片与 flash 的管脚对应关系。
+
+    • IO 管脚 – 具有以下重要功能之一：
+
+         – Strapping 管脚 – 启动时逻辑电平需为特定值。详见章节 3 启动配置项。
+
+            说明：
+            Strapping 管脚在 管脚名称或 复位时管脚配置处高亮，而非管脚功能。
+
+         – USB_D+/- – 默认情况下连接 USB 串口/JTAG 控制器。此类管脚需重新配置，方可用作 GPIO。
+
+         – JTAG 接口 – 通常用于调试功能。详见表 2-4 QFN40 封装 IO MUX 管脚功能 或表 2-5QFN32 封装 IO
+          MUX 管脚功能。要释放这类管脚，可用 USB 串口/JTAG 控制器的 USB_D+/- 功能代替。详见章节 3.4
+          JTAG 信号源控制。
+
+         – UART0 接口 – 通常用于调试功能。详见表 2-4 QFN40 封装 IO MUX 管脚功能 或表 2-5 QFN32 封装
+          IO MUX 管脚功能。
+
+         – VDD_SPI – 默认为封装外 flash 的供电管脚，仅在 flash 连接外部电源时可用作 GPIO。
+
+更多关于管脚分配的信息，可见章节 2.3.5 外设管脚分配 和 ESP32-C6 管脚总览。
+
+
+
+
+乐鑫信息科技                                24           ESP32-C6 系列芯片技术规格书 v1.5
+                                   反馈文档意见
+2   管脚
+
+
+
+2.3.5 外设管脚分配
+表 2-10 QFN40 封装外设管脚分配 和表 2-11 QFN32 封装外设管脚分配 根据优先级高亮了可以分配给每个外
+设接口的管脚：
+
+    • 优先级 1 (P1) ：固定管脚，通过 IO MUX 或 LP IO MUX 直接连接外设信号。
+     如果某个外设接口没有优先级 1 的管脚（如 UART1）
+                                ，则可以分配优先级 2 到优先级 4 的任意 GPIO 管脚。
+
+    • 任意 GPIO 管脚，通过 GPIO 交换矩阵映射外设信号，优先级为 2、3 或 4：
+
+         – 优先级 2 (P2) ：GPIO 管脚，没有限制，可以自由分配。
+
+
+         – 优先级 3 (P3) ：GPIO 管脚，使用时需要注意是否会和章节 2.3.4 GPIO 和 LP GPIO 的限制 描述的重
+          要功能冲突：
+
+           * GPIO4、GPIO5、GPIO8、GPIO9、GPIO15 ：Strapping 管脚。
+
+           * GPIO12、GPIO13 ：USB 串口/JTAG 接口。
+
+           * GPIO4、GPIO5、GPIO6、GPIO7 ：JTAG 接口。
+
+           * GPIO16、GPIO17 : UART0 接口。
+
+           * GPIO27 : VDD_SPI 管脚。该管脚默认用于给封装外 flash 供电，仅在 flash 连接外部电源时可用
+             作 GPIO。
+
+         – 优先级 4 (P4) ：已分配或不推荐使用的 GPIO 管脚，如章节 2.3.4 GPIO 和 LP GPIO 的限制 所述：
+
+           * GPIO24、GPIO25、GPIO26、GPIO28、GPIO29、GPIO30 ：
+                                                       SPI0/1 管脚，
+                                                                推荐连接封装外 flash，
+             不建议用作 GPIO。
+
+     如果某个外设接口没有优先级 2 到 4 的管脚（如 USB 串口/JTAG)，则表示只能分配优先级 1 的管脚。
+
+    说明：
+
+     • 连接到 IO MUX 或 LP IO MUX 管脚的外设信号，请参考章节 2.3.1 IO MUX 功能 或章节 2.3.2 LP IO MUX 功能。
+
+     • 可以分配到 GPIO 管脚的外设信号，请参考
+      《ESP32-C6 技术参考手册》 > 章节 IO MUX 和 GPIO 交换矩阵 > 章节外设管脚列表。
+
+
+
+
+乐鑫信息科技                                   25              ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+                                                                                                                                     表 2-10. QFN40 封装外设管脚分配
+          乐鑫信息科技
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                2
+                                                                                                                                                                                                                                                                                                                                管脚
+                                   管脚序号   管脚名称         USB 串口/JTAG 1 JTAG        SDIO Slave        LP UART             LP I2C         ADC              UART0 2       SPI0/1 2      SPI2 2         UART1         I2C           I2S           PCNT          TWAI          LED PWM       MCPWM         RMT           PARLIO
+                                   1      ANT
+                                   2      VDDA3P3
+                                   3      VDDA3P3
+                                   4      CHIP_PU
+                                   5      VDDPST1
+                                   6      XTAL_32K_P                                               LP_UART_DTRN (P1)                   ADC1_CH0 (P1)   GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)     GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)
+                                   7      XTAL_32K_N                                               LP_UART_DSRN (P1)                   ADC1_CH1 (P1)   GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)     GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)
+                                   8      GPIO2                                                    LP_UART_RTSN (P1)                   ADC1_CH2 (P1)   GPIO2 (P2)    GPIO2 (P2)    FSPIQ (P1)     GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)
+                                   9      GPIO3                                                    LP_UART_CTSN (P1)                   ADC1_CH3 (P1)   GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)     GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)
+                                   10     MTMS                       MTMS (P1)                     LP_UART_RXD (P1)                    ADC1_CH4 (P1)   GPIO4 (P3)    GPIO4 (P3)    FSPIHD (P1)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)
+                                   11     MTDI                       MTDI (P1)                     LP_UART_TXD (P1)                    ADC1_CH5 (P1)   GPIO5 (P3)    GPIO5 (P3)    FSPIWP (P1)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)
+                                   12     MTCK                       MTCK (P1)                                         LP_I2C_SDA (P1) ADC1_CH6 (P1)   GPIO6 (P3)    GPIO6 (P3)    FSPICLK (P1)   GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)
+                                   13     MTDO                       MTDO (P1)                                         LP_I2C_SCL (P1)                 GPIO7 (P3)    GPIO7 (P3)    FSPID (P1)     GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)
+                                   14     GPIO8                                                                                                        GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)     GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)
+                                   15     GPIO9                                                                                                        GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)     GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)
+                                   16     GPIO10                                                                                                       GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)    GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)   GPIO10 (P2)
+                                   17     GPIO11                                                                                                       GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)    GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)   GPIO11 (P2)
+                                   18     GPIO12       USB_D- (P1)                                                                                     GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)    GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)
+                                   19     GPIO13       USB_D+ (P1)                                                                                     GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)    GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)
+                                   20     SPICS0                                                                                                       GPIO24 (P4)   SPICS0 (P1)   GPIO24 (P4)    GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)   GPIO24 (P4)
+                                   21     SPIQ                                                                                                         GPIO25 (P4)   SPIQ (P1)     GPIO25 (P4)    GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)   GPIO25 (P4)
+                                   22     SPIWP                                                                                                        GPIO26 (P4)   SPIWP (P1)    GPIO26 (P4)    GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)   GPIO26 (P4)
+                                   23     VDD_SPI                                                                                                      GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)    GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)   GPIO27 (P3)
+                                   24     SPIHD                                                                                                        GPIO28 (P4)   SPIHD (P1)    GPIO28 (P4)    GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)   GPIO28 (P4)
+                                   25     SPICLK                                                                                                       GPIO29 (P4)   SPICLK (P1)   GPIO29 (P4)    GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)   GPIO29 (P4)
+反馈文档意见
+
+
+
+
+                                   26     SPID                                                                                                         GPIO30 (P4)   SPID (P1)     GPIO30 (P4)    GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)   GPIO30 (P4)
+                                   27     GPIO15                                                                                                       GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)    GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)
+                                   28     VDDPST2
+         26
+
+
+
+
+                                   29     U0TXD                                                                                                        U0TXD (P1)    GPIO16 (P3)   FSPICS0 (P1)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)
+                                   30     U0RXD                                                                                                        U0RXD (P1)    GPIO17 (P3)   FSPICS1 (P1)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)
+                                   31     SDIO_CMD                               SDIO_CMD (P1)                                                         GPIO18 (P2)   GPIO18 (P2)   FSPICS2 (P1)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)
+                                   32     SDIO_CLK                               SDIO_CLK (P1)                                                         GPIO19 (P2)   GPIO19 (P2)   FSPICS3 (P1)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)
+                                   33     SDIO_DATA0                             SDIO_DATA0 (P1)                                                       GPIO20 (P2)   GPIO20 (P2)   FSPICS4 (P1)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)
+                                   34     SDIO_DATA1                             SDIO_DATA1 (P1)                                                       GPIO21 (P2)   GPIO21 (P2)   FSPICS5 (P1)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)
+                                   35     SDIO_DATA2                             SDIO_DATA2 (P1)                                                       GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)    GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)
+                                   36     SDIO_DATA3                             SDIO_DATA3 (P1)                                                       GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)    GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)
+                                   37     VDDA1
+                                   38     XTAL_N
+                                   39     XTAL_P
+                                   40     VDDA2
+         ESP32-C6 系列芯片技术规格书 v1.5
+
+
+
+
+                                   41     GND
+                                   1 USB 串口/JTAG 的 USB_D- 和 USB_D+ 管脚可按照 《ESP32-C6 技术参考手册》 的 USB_SERIAL_JTAG_EXCHG_PINS 位配置后交换。
+                                   2 UART0 接口、SPI0/1 接口、SPI2 接口的外设信号，无论是否已通过 IO MUX 直接连接 固定管脚 ，均可通过 GPIO 交换矩阵映射至任意 GPIO 管脚。
+                                                                                                                                表 2-11. QFN32 封装外设管脚分配
+          乐鑫信息科技
+
+
+
+
+                                                                                                                                                                                                                                                                                                                  2
+                                                                                                                                                                                                                                                                                                                  管脚
+                                   管脚序号   管脚名称         USB 串口/JTAG 1 JTAG        SDIO Slave        LP UART             LP I2C         ADC              UART0 2       SPI2 2         UART1         I2C           I2S           PCNT          TWAI          LED PWM       MCPWM         RMT           PARLIO
+                                   1      ANT
+                                   2      VDDA3P3
+                                   3      VDDA3P3
+                                   4      CHIP_PU
+                                   5      VDDPST1
+                                   6      XTAL_32K_P                                               LP_UART_DTRN (P1)                   ADC1_CH0 (P1)   GPIO0 (P2)    GPIO0 (P2)     GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)    GPIO0 (P2)
+                                   7      XTAL_32K_N                                               LP_UART_DSRN (P1)                   ADC1_CH1 (P1)   GPIO1 (P2)    GPIO1 (P2)     GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)    GPIO1 (P2)
+                                   8      GPIO2                                                    LP_UART_RTSN (P1)                   ADC1_CH2 (P1)   GPIO2 (P2)    FSPIQ (P1)     GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)    GPIO2 (P2)
+                                   9      GPIO3                                                    LP_UART_CTSN (P1)                   ADC1_CH3 (P1)   GPIO3 (P2)    GPIO1 (P2)     GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)    GPIO3 (P2)
+                                   10     MTMS                       MTMS (P1)                     LP_UART_RXD (P1)                    ADC1_CH4 (P1)   GPIO4 (P3)    FSPIHD (P1)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)    GPIO4 (P3)
+                                   11     MTDI                       MTDI (P1)                     LP_UART_TXD (P1)                    ADC1_CH5 (P1)   GPIO5 (P3)    FSPIWP (P1)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)    GPIO5 (P3)
+                                   12     MTCK                       MTCK (P1)                                         LP_I2C_SDA (P1) ADC1_CH6 (P1)   GPIO6 (P3)    FSPICLK (P1)   GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)    GPIO6 (P3)
+                                   13     MTDO                       MTDO (P1)                                         LP_I2C_SCL (P1)                 GPIO7 (P3)    FSPID (P1)     GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)    GPIO7 (P3)
+                                   14     GPIO8                                                                                                        GPIO8 (P3)    GPIO8 (P3)     GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)    GPIO8 (P3)
+                                   15     GPIO9                                                                                                        GPIO9 (P3)    GPIO9 (P3)     GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)    GPIO9 (P3)
+                                   16     GPIO12       USB_D- (P1)                                                                                     GPIO12 (P3)   GPIO12 (P3)    GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)   GPIO12 (P3)
+                                   17     GPIO13       USB_D+ (P1)                                                                                     GPIO13 (P3)   GPIO13 (P3)    GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)   GPIO13 (P3)
+                                   18     GPIO14                                                                                                       GPIO14 (P2)   GPIO14 (P2)    GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)   GPIO14 (P2)
+                                   19     GPIO15                                                                                                       GPIO15 (P3)   GPIO15 (P3)    GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)   GPIO15 (P3)
+                                   20     VDDPST2
+                                   21     U0TXD                                                                                                        U0TXD (P1)    FSPICS0 (P1)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)   GPIO16 (P3)
+                                   22     U0RXD                                                                                                        U0RXD (P1)    FSPICS1 (P1)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)   GPIO17 (P3)
+                                   23     SDIO_CMD                               SDIO_CMD (P1)                                                         GPIO18 (P2)   FSPICS2 (P1)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)   GPIO18 (P2)
+                                   24     SDIO_CLK                               SDIO_CLK (P1)                                                         GPIO19 (P2)   FSPICS3 (P1)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)   GPIO19 (P2)
+                                   25     SDIO_DATA0                             SDIO_DATA0 (P1)                                                       GPIO20 (P2)   FSPICS4 (P1)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)   GPIO20 (P2)
+反馈文档意见
+
+
+
+
+                                   26     SDIO_DATA1                             SDIO_DATA1 (P1)                                                       GPIO21 (P2)   FSPICS5 (P1)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)   GPIO21 (P2)
+                                   27     SDIO_DATA2                             SDIO_DATA2 (P1)                                                       GPIO22 (P2)   GPIO22 (P2)    GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)   GPIO22 (P2)
+                                   28     SDIO_DATA3                             SDIO_DATA3 (P1)                                                       GPIO23 (P2)   GPIO23 (P2)    GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)   GPIO23 (P2)
+         27
+
+
+
+
+                                   29     VDDA1
+                                   30     XTAL_N
+                                   31     XTAL_P
+                                   32     VDDA2
+                                   33     GND
+                                   1 USB 串口/JTAG 的 USB_D- 和 USB_D+ 管脚可按照 《ESP32-C6 技术参考手册》 的 USB_SERIAL_JTAG_EXCHG_PINS 位配置后交换。
+                                   2 UART0 接口、SPI2 接口的外设信号，无论是否已通过 IO MUX 直接连接 固定管脚 ，均可通过 GPIO 交换矩阵映射至任意 GPIO 管脚。
+
+                                   3 连接封装内 flash 的 SPI0/1 接口管脚未引出至 QFN32 封装芯片。
+         ESP32-C6 系列芯片技术规格书 v1.5
+2       管脚
+
+
+
+2.4 模拟管脚
+
+                                     表 2-12. 模拟管脚
+
+    QFN40    QFN32   管脚        管脚      管脚
+    管脚序号     管脚序号    名称        类型      功能
+    1        1       ANT       I/O     射频输入和输出
+                                       高电平：芯片使能（上电）；
+    4        4       CHIP_PU   —
+                                       低电平：芯片关闭（掉电）；
+                                       注意不能让 CHIP_PU 管脚浮空
+    38       30      XTAL_N    —       连接芯片有源晶振或无源晶振的外部时钟输入/输出。
+    39       31      XTAL_P    —       P/N 指差分时钟正极/负极端。
+
+
+
+
+乐鑫信息科技                                    28        ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+2   管脚
+
+
+
+2.5 电源
+2.5.1 电源管脚
+表 2-13 电源管脚 列举了为芯片供电的电源管脚。
+
+                                          表 2-13. 电源管脚
+
+         QFN40    QFN32     管脚                                   电源 1,2
+         管脚序号     管脚序号      名称               方向       电源域 / 其他              IO 管脚
+         2        2         VDDA3P3          输入       模拟电源域
+         3        3         VDDA3P3          输入       模拟电源域
+         5        5         VDDPST1          输入       LP 数字/部分模拟管脚电源域       LP IO 3
+                                             输入       封装内 flash （备用电源线）
+         23       —         VDD_SPI
+                                             输出       封装内和封装外 flash
+         28       20        VDDPST2          输入       数字电源域，给 HP 数字域供电      HP IO
+         37       29        VDDA1            输入       模拟电源域
+         40       32        VDDA2            输入       模拟电源域
+         41       33        GND              —        外部接地
+         1 请结合章节 2.5.2 电源管理 阅读。
+         2 电压、电流的推荐值和最大值，详见章节 5.1 绝对最大额定值 和章节 5.2 建议工作条件。
+         3 LP IO 管脚即由 VDDPST1 供电的管脚，如图 2-3 ESP32-C6 电源管理 所示，也可参考表 2-1
+             QFN40 封装管脚概述 或表 2-2 QFN32 封装管脚概述 > 供电管脚一栏。
+
+
+2.5.2 电源管理
+电源管理如图 2-3 ESP32-C6 电源管理 所示。
+
+芯片上的元器件通过电压稳压器供电。
+
+                                          表 2-14. 电压稳压器
+
+                       电压稳压器      输出       电源
+                       HP         1.1 V    HP 电源域
+                       LP         1.1 V    LP 电源域
+
+
+
+
+乐鑫信息科技                                           29              ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+2   管脚
+
+
+
+                             VDD_PST1                VDD_PST2    VDDA1 VDDA2
+
+
+
+
+                                     LP                 HP
+                                   Voltage            Voltage                RSPI
+                                  Regulator          Regulator
+
+                    Analog
+
+                                                                                               VDD_SPI
+
+
+
+
+                                                        HP
+             LP IO               LP System                           HP IO
+                                                      System
+
+
+
+
+                                              图 2-3. ESP32-C6 电源管理
+
+
+
+2.5.3 芯片上电和复位
+芯片上电后，其电源轨需要一点时间方可稳定。之后，用于上电和复位的管脚 CHIP_PU 拉高，激活芯片。更多
+关于 CHIP_PU 及上电和复位时序的信息，请见图 2-4 和表 2-15。
+
+                                        tST BL                        tRST
+
+                             2.8 V
+         VDDA3P3,
+         VDDPST1,
+         VDDPST2,
+           VDDA1,
+           VDDA2
+
+                             VIL_nRST
+         CHIP_PU
+
+
+
+                                          图 2-4. 上电和复位时序参数图
+
+
+
+                                        表 2-15. 上电和复位时序参数说明
+
+           参数        说明                                                             最小值 (µs)
+                     CHIP_PU 管脚拉高激活芯片前，VDDA3P3、VDDPST1、VDDPST2、
+           tST BL                                                                         50
+                     VDDA1 和 VDDA2 达到稳定所需的时间
+                     CHIP_PU 电平低于 VIL_nRST （具体数值参考表 5-4）从而复位芯
+           tRST                                                                           50
+                     片的时间
+
+
+
+
+乐鑫信息科技                                                 30            ESP32-C6 系列芯片技术规格书 v1.5
+                                                   反馈文档意见
+2   管脚
+
+
+
+2.6 芯片与 flash 的管脚对应关系
+表 2-16 列出了所有 SPI 模式下芯片与封装外 flash 管脚的推荐连接关系。
+
+封装内带有 flash 的芯片变型（即 QFN32 封装版本，见表 1-1 ESP32-C6 系列芯片对比），与封装内 flash 连接
+的管脚未引出，但连接关系也可参考下表。
+
+更多关于 SPI 控制器的信息，可参考章节 4.2.1.2 SPI 控制器。
+
+    注意：
+
+    请勿将连接 flash 的管脚用于其他用途。
+
+
+
+                        表 2-16. QFN40 封装芯片与 flash 的管脚对应关系
+
+                QFN40     管脚名称      Single SPI   Dual SPI   Quad SPI / QPI
+                管脚序号                  Flash       Flash         Flash
+                25         SPICLK      CLK         CLK           CLK
+                20         SPICS0      CS#         CS#           CS#
+                26          SPID      MOSI        SIO0          SIO0
+                21          SPIQ      MISO        SIO1          SIO1
+                22         SPIWP      WP#                       SIO2
+                24         SPIHD     HOLD#                      SIO3
+                1 SIO：串行输入输出 (Serial Data Input and Output)
+
+
+
+
+乐鑫信息科技                                    31                  ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+3   启动配置项
+
+
+
+3 启动配置项
+芯片在上电或硬件复位时，可以通过 Strapping 管脚 和 eFuse 参数 配置如下启动参数，无需微处理器的参
+与：
+
+    • 芯片启动模式
+
+       – Strapping 管脚：GPIO8 和 GPIO9
+
+    • SDIO 输入采样沿和输出驱动沿
+
+       – Strapping 管脚：MTMS 和 MTDI
+
+    • ROM 日志打印
+
+       – Strapping 管脚：GPIO8
+
+       – eFuse 参数：EFUSE_UART_PRINT_CONTROL 和 EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT
+
+    • JTAG 信号源
+
+       – Strapping 管脚：GPIO15
+
+       – eFuse 参数：EFUSE_DIS_PAD_JTAG、EFUSE_DIS_USB_JTAG 和 EFUSE_JTAG_SEL_ENABLE
+
+上述 eFuse 参数的默认值均为 0，也就是说没有烧写过。eFuse 只能烧写一次，一旦烧写为 1，便不能恢复为 0。
+有关烧写 eFuse 的信息，请参考 《ESP32-C6 技术参考手册》 > 章节 eFuse 控制器。
+
+上述 strapping 管脚如果没有连接任何电路或连接的电路处于高阻抗状态，则其默认值（即逻辑电平值）取决于
+管脚内部弱上拉/下拉电阻在复位时的状态。
+
+                               表 3-1. Strapping 管脚的默认配置
+
+                               Strapping 管脚    默认配置   值
+                               MTMS             浮空    –
+                               MTDI             浮空    –
+                               GPIO8            浮空    –
+                               GPIO9           弱上拉    1
+                               GPIO15           浮空    –
+
+
+要改变 strapping 管脚的值，可以连接外部下拉/上拉电阻。如果 ESP32-C6 用作主机 MCU 的从设备，strapping
+管脚的电平也可通过主机 MCU 控制。
+
+所有 strapping 管脚都有锁存器。芯片复位时，锁存器采样并存储相应 strapping 管脚的值，一直保持到芯片掉
+电或关闭。锁存器的状态无法用其他方式更改。因此，strapping 管脚的值在芯片工作时一直可读取，strapping
+管脚在芯片复位后作为普通 IO 管脚使用。更多关于芯片复位的信息，详见 《ESP32-C6 技术参考手册》 > 章节
+复位和时钟。
+
+Strapping 管脚的信号时序需遵循表 3-2 和图 3-1 所示的 建立时间和 保持时间。
+
+
+
+
+乐鑫信息科技                                    32              ESP32-C6 系列芯片技术规格书 v1.5
+                                        反馈文档意见
+3   启动配置项
+
+
+                                  表 3-2. Strapping 管脚的时序参数说明
+
+       参数    说明                                                                  最小值 (ms)
+             建立时间，即拉高 CHIP_PU 激活芯片前，电源轨达到稳定所需的
+       tSU                                                                              0
+             时间
+             保持时间，即 CHIP_PU 已拉高、strapping 管脚变为普通 IO 管脚
+       tH                                                                               3
+             开始工作前，可读取 strapping 管脚值的时间
+
+
+                                              tSU      tH
+
+
+
+
+                             VIH_nRST
+
+
+                CHIP_PU
+
+
+
+
+                                VIH
+
+
+
+             Strapping pin
+
+
+
+                                      图 3-1. Strapping 管脚的时序参数图
+
+
+
+3.1 芯片启动模式控制
+复位释放后，GPIO8 和 GPIO9 共同决定启动模式。详见表 3-3 芯片启动模式控制。
+
+                                          表 3-3. 芯片启动模式控制
+
+                             启动模式                            GPIO8      GPIO9
+                             SPI boot 模式                     任意值          1
+                             Joint download boot 模式 2          1          0
+                             1 加粗表示默认值和默认配置。
+                             2 Joint Download Boot 模式下支持以下下载方
+                               式：
+                                      • USB-Serial-JTAG Download Boot
+                                      • UART Download Boot
+                                      • SDIO Download Boot
+
+
+
+3.2 SDIO 输入采样沿和输出驱动沿控制
+MTMS 和 MTDI 管脚可用于调节 SDIO 输入采样沿和输出驱动沿。详见表 3-4 SDIO 输入采样沿/输出驱动沿控
+制。
+
+
+
+
+乐鑫信息科技                                               33                  ESP32-C6 系列芯片技术规格书 v1.5
+                                                反馈文档意见
+3    启动配置项
+
+
+                           表 3-4. SDIO 输入采样沿/输出驱动沿控制
+
+                            沿控制                   MTMS   MTDI
+                            下降沿采样下降沿输出             0      0
+                            下降沿采样上升沿输出             0      1
+                            上升沿采样下降沿输出             1      0
+                            上升沿采样上升沿输出             1      1
+                            1 MTMS 和 MTDI 默认浮空，以上均非默认
+                             配置。
+
+
+
+3.3 ROM 日志打印控制
+系统启动过程中，
+       若 LP_AON_STORE4_REG[0] 为 0
+                                （默认）
+                                   ，则 ROM 代码日志打印开启；若 LP_AON_STORE4_REG[0]
+为 0，则 ROM 代码日志打印关闭。ROM 代码日志打印开启时，可打印至：
+
+     •（默认）UART0 和 USB 串口/JTAG 控制器
+
+     • UART0
+
+     • USB 串口/JTAG 控制器
+
+EFUSE_UART_PRINT_CONTROL 和 GPIO8 控制 UART0 ROM 日志打印，如表 3-5 UART0 ROM 日志打印控制
+所示。
+
+                              表 3-5. UART0 ROM 日志打印控制
+
+                  UART0 ROM 日志打印     EFUSE_UART_PRINT_CONTROL       GPIO8
+                                                  0                 忽略
+                  使能                              1                   0
+                                                  2                   1
+                                                  1                   1
+                  关闭                              2                   0
+                                                  3                 忽略
+                  1 加粗表示默认值和默认配置。
+
+
+EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT 控制 USB 串口/JTAG 控制器 ROM 日志打印，如表 3-6 USB 串
+口/JTAG ROM 日志打印控制 所示。
+
+                          表 3-6. USB 串口/JTAG ROM 日志打印控制
+
+    USB 串口/JTAG
+    ROM 日志打印控       EFUSE_DIS_USB_SERIAL_JTAG 2    EFUSE_DIS_USB_SERIAL_JTAG_ROM_PRINT
+    制
+    使能                           0                                    0
+                                 0                                    1
+    关闭
+                                 1                                  忽略
+    1 加粗表示默认值和默认配置。
+    2 EFUSE_DIS_USB_SERIAL_JTAG 控制是否关闭 USB 串口/JTAG。
+
+
+
+乐鑫信息科技                                     34                 ESP32-C6 系列芯片技术规格书 v1.5
+                                       反馈文档意见
+3    启动配置项
+
+
+
+3.4 JTAG 信号源控制
+在系统启动早期阶段，GPIO15 可用于控制 JTAG 信号源。该管脚没有内部上下拉电阻，strapping 的值必须由
+不处于高阻抗状态的外部电路控制。
+
+如表 3-7 JTAG 信号源控制 所示，
+                    GPIO15 与 EFUSE_DIS_PAD_JTAG、
+                                               EFUSE_DIS_USB_JTAG 和 EFUSE_JTAG_SEL_ENABLE
+共同控制 JTAG 信号源。
+
+                                 表 3-7. JTAG 信号源控制
+
+JTAG 信号源           EFUSE_DIS_PAD_JTAG EFUSE_DIS_USB_JTAG EFUSE_JTAG_SEL_ENABLE GPIO15
+                           0                   0                   0            忽略
+USB 串口/JTAG 控制器            0                   0                   1             1
+                           1                   0                  忽略            忽略
+                           0                   0                   1             0
+JTAG 管脚 2
+                           0                   1                  忽略            忽略
+JTAG 关闭                    1                   1                  忽略            忽略
+    1 加粗表示默认值和默认配置。
+    2 即 MTDI、MTCK、MTMS 和 MTDO。
+
+
+
+
+乐鑫信息科技                                  35           ESP32-C6 系列芯片技术规格书 v1.5
+                                     反馈文档意见
+4   功能描述
+
+
+
+4 功能描述
+
+4.1 系统
+本章节描述了芯片操作的核心部分，包括微处理器、存储器组织结构、系统组件和安全功能。
+
+
+4.1.1 微处理器和主机
+本章节描述了芯片内的核心处理单元及其功能。
+
+
+4.1.1.1 高性能处理器
+
+ESP-RISC-V CPU (HP CPU) 是一款基于 RISC-V 指令集架构 (ISA) 的高性能 32 位内核，包括基本整数 (I)、乘
+法/除法 (M)、原子 (A) 和压缩 (C) 标准扩展。
+
+特性
+
+    • 四级流水线，时钟工作频率高达 160 MHz
+
+    • RV32IMAC ISA (指令集架构)
+
+    • 符合 RISC-V 指令集手册 v2.2 第一卷“非特权架构”(RISC-V Instruction Set Manual Volume I: Unprivileged
+     ISA, Version 2.2) 和 RISC-V 指令集手册 v1.10 第二卷“特权架构”(RISC-V Instruction Set Manual, Volume II:
+     Privileged Architecture, Version 1.10)
+
+    • 通过 IRAM/DRAM 接口零等待周期访问片上 SRAM 和缓存中的程序和数据
+
+    • 具有静态分支预测功能的分支目标缓冲区 (BTB)
+
+    • 支持用户模式 (user mode) 以及中断委托
+
+    • 中断控制器 (INTC) 具有多达 28 个外部向量中断，适用于机器模式 (machine mode) 和用户模式，可配置
+     16 个优先级和阈值级别
+
+    • 专用于各个特权模式的核心本地中断 (CLINT)
+
+    • 调试模块 (DM) 符合 RISC-V 外部调试支持规范 (RISC-V External Debug Support) v0.13，支持通过行业标
+     准的 JTAG/USB 端口连接外部调试器
+
+    • 支持指令追踪，详见章节 4.1.1.2 RISC-V 追踪编码器
+
+    • 硬件触发器符合 RISC-V 调试规范 v0.13，具有多达 4 个断点/观察点
+
+    • 物理存储器保护 (PMP) 和物理存储器属性 (PMA)，最多可配置 16 个区域
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 高性能处理器。
+
+
+4.1.1.2 RISC-V 追踪编码器
+
+ESP32-C6 芯片中的 RISC-V 追踪编码器提供了一种从高性能 CPU 执行过程中捕获详细追踪信息的方法，以便
+对系统进行更深入的分析和优化。它连接到 HP CPU 的指令追踪接口，并将信息压缩成较小的数据包，然后存
+储在内部 SRAM 中。
+
+
+
+
+乐鑫信息科技                                          36             ESP32-C6 系列芯片技术规格书 v1.5
+                                              反馈文档意见
+4   功能描述
+
+
+特性
+
+    • 兼容 RISC-V Processor Trace 1.0（RISC-V 追踪规范 v1.0）
+
+    • 每隔几个时钟周期或数据包发送同步数据包
+
+    • 使用零字节作为锚定符来识别数据包之间的边界
+
+    • 可配置的存储器写入模式：循环或非循环模式
+
+    • 支持丢包状态标识
+
+    • 支持丢包后自动重启
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 RISC-V 追踪编码器 (TRACE) 。
+
+
+4.1.1.3 低功耗处理器
+
+ESP32-C6 低功耗 CPU (LP CPU) 是一款基于 RISC-V ISA 的 32 位处理器，包括整数 (I)、乘法/除法 (M) 、原子 (A)
+和压缩 (C) 标准扩展。它专为超低功耗设计，能够在 Deep-sleep 模式下、HP CPU 掉电时保持上电状态。
+
+特性
+
+    • 二级流水线，时钟频率最高 20 MHz
+
+    • RV32IMAC ISA (指令集架构)
+
+    • 支持 19 个向量中断
+
+    • 调试模块 (DM) 符合 RISC-V 调试规范 v0.13，支持通过行业标准的 JTAG/USB 端口连接外部调试器
+
+    • 硬件触发器符合 RISC-V 调试规范 v0.13，具有 2 个断点/观察点
+
+    • 支持核心性能指标事件
+
+    • 可唤醒 HP CPU 或向 HP CPU 发送中断
+
+    • 可访问 HP 存储器和 LP 存储器
+
+    • 可访问所有外设空间
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 低功耗处理器。
+
+
+4.1.1.4 GDMA 控制器
+
+GDMA 控制器是通用的直接内存访问控制器，可以在无需 CPU 干预的情况下完成外设与存储器之间及存储器与
+存储器之间的数据传输。GDMA 具有六个独立通道，其中三个用于传输，三个用于接收。这些通道由具有 GDMA
+功能的外设共享，包括 SPI2、UHCI (UART0/UART1) 、I2S、AES、SHA、ADC 和 PARLIO。
+
+特性
+
+    • 可编程的数据传输长度（以字节为单位）
+
+    • 链表描述符，用于高效的数据传输管理
+
+    • 在访问内部 RAM 时进行 INCR burst 传输，以提高性能
+
+    • 访问高达 384 KB 的内部 RAM 地址空间
+
+
+
+乐鑫信息科技                                      37          ESP32-C6 系列芯片技术规格书 v1.5
+                                        反馈文档意见
+4   功能描述
+
+
+    • 软件可选择请求服务的外设
+
+    • 用于管理带宽的固定优先级和轮询通道仲裁方案
+
+    • 支持事件任务矩阵
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 GDMA 控制器 (DMA) 。
+
+
+4.1.2 存储器组织结构
+本章节描述了存储器布局，解释数据的存储、访问和管理方式，以实现高效的操作。
+
+ESP32-C6 的地址映射结构如图 4-1 所示。
+
+
+
+
+                               图 4-1. 地址映射结构
+
+
+4.1.2.1 内部存储器
+
+ESP32-C6 的内部存储器即集成于芯片晶圆上或封装内部的存储器，包括 ROM、SRAM、eFuse 和 flash。
+
+特性
+
+    • 320 KB 的 ROM，用于程序启动和内核功能调用
+
+    • 512 KB 的高性能 SRAM (HP SRAM)，用于数据和指令存储
+
+    • 16 KB 的低功耗 SRAM (LP SRAM)，可被 HP CPU 或 LP CPU 访问，在 Deep-sleep 模式下可以保存数据
+
+    • 4096 位 eFuse 存储器，其中 1792 位用户可用，更多信息详见章节 4.1.2.3 eFuse 控制器
+
+    • 封装内 flash
+
+       – flash 大小详见章节 1 ESP32-C6 系列型号对比
+
+
+乐鑫信息科技                                38           ESP32-C6 系列芯片技术规格书 v1.5
+                                  反馈文档意见
+4   功能描述
+
+
+       – 更多关于 flash 规格的信息，请参考章节 5.7 存储器规格
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节系统和存储器。
+
+
+4.1.2.2 外部存储器
+
+ESP32-C6 支持通过 SPI、Dual SPI、Quad SPI、QPI 等接口在芯片封装外连接存储器。
+
+特性
+
+    • 支持连接最大 16 MB 的封装外 flash
+
+       – 支持基于 XTS-AES 的硬件加解密功能
+
+       – 最多 16 MB 的 CPU 指令空间以 64 KB 的块映射到 flash，支持 32 位取指
+
+       – 最多 16 MB 的 CPU 数据空间以 64 KB 的块映射到 flash，支持 8 位、16 位和 32 位读取
+
+    • 通过 32 KB 只读 cache 访问外部存储器
+
+       – 四路组相连
+
+       – 32 字节 cache 块 (block)
+
+       – 支持关键字优先 (critical word first) 和提前重启 (early restart)
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节系统和存储器。
+
+
+4.1.2.3 eFuse 控制器
+
+eFuse 存储器是只可编程一次的存储器，用于存储参数内容和用户数据。ESP32-C6 芯片的 eFuse 控制器用于
+烧写和读取 eFuse 存储器。
+
+特性
+
+    • 配置部分区域的写保护
+
+    • 配置部分区域的读保护
+
+    • 防止数据损坏的多种硬件编码方案
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节 eFuse 控制器。
+
+
+4.1.3 系统组件
+本章节描述了对系统的整体功能和控制起到重要作用的组件。
+
+
+4.1.3.1 IO MUX 和 GPIO 交换矩阵
+
+ESP32-C6 芯片中的 IO MUX 和 GPIO 交换矩阵可将外设输入和输出信号灵活连接到 GPIO 管脚。这些外设通过
+允许 I/O 配置、支持多路复用和外设输入信号的信号同步，增强了芯片的功能和性能。
+
+特性
+
+    • 30 个或 20 个 GPIO 管脚，用于通用 I/O 或连接到内部外设信号
+
+    • GPIO 交换矩阵：
+
+
+乐鑫信息科技                                        39               ESP32-C6 系列芯片技术规格书 v1.5
+                                          反馈文档意见
+4   功能描述
+
+
+       – 将 85 个外设输入信号和 93 个输出信号连接到任意 GPIO 管脚
+
+       – 基于 IO MUX 操作时钟的外设输入信号同步
+
+       – 支持 GPIO 滤波器对输入信号进行滤波
+
+       – 支持毛刺滤波器对输入信号进行二次滤波
+
+       – 支持 Sigma delta 调制 (SDM) 输出
+
+    • IO MUX 用于将某些数字信号 (SPI、JTAG、UART) 直接连接到管脚
+
+    • LP IO MUX 用于控制 LP 系统中外设使用的八个 LP GPIO 管脚 (GPIO0 ~ GPIO7)
+
+    • 支持事件任务矩阵
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节 IO MUX 和 GPIO 交换矩阵。
+
+
+4.1.3.2 复位
+
+ESP32-C6 芯片提供四种级别的复位方式，分别是 CPU 复位、内核复位、系统复位和芯片复位。除芯片复位外，
+其他复位方式不影响片上内存存储的数据。
+
+特性
+
+    • 四种复位类型：
+
+       – CPU 复位 – 复位 CPU 核心
+
+       – 内核复位 – 复位整个数字系统，但不包括 LP 系统
+
+       – 系统复位 – 复位整个数字系统，包括 LP 系统
+
+       – 芯片复位 – 复位整个芯片
+
+    • 复位触发方式：
+
+       – 直接由硬件触发
+
+       – 通过配置 CPU 的相应寄存器进行软件触发
+
+    • 支持读取复位源
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节复位和时钟。
+
+
+4.1.3.3 时钟
+
+ESP32-C6 芯片的时钟来自振荡器、RC 电路和 PLL 电路，然后经过分频器或时钟选择器进行处理。时钟根据频
+率可以分为高用于 HP 系统的高速时钟和用于 LP 系统及某些外设的低速时钟。
+
+特性
+
+    • 用于 HP 系统的高速时钟
+
+       – 40 MHz 外部晶振时钟
+
+           说明：
+           芯片无法在没有外部晶振时钟的情况下工作。
+
+
+
+
+乐鑫信息科技                                  40           ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+4   功能描述
+
+
+      – 480 MHz 内部 PLL 时钟
+
+    • 用于 LP 系统和某些低功耗模式外设的低速时钟
+
+      – 32 kHz 外部晶振时钟
+
+      – 可调频率的内部快速 RC 振荡器（默认为 17.5 MHz）
+
+      – 136 kHz 内部慢速 RC 振荡器
+
+      – 通过 XTAL_32K_P 输入的外部慢速时钟（默认为 32 kHz）
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节复位和时钟。
+
+
+4.1.3.4 中断矩阵
+
+ESP32-C6 芯片的中断矩阵用于将外设和事件生成的中断请求映射到 CPU 中断。
+
+特性
+
+    • 接收 77 个外部中断源作为输入
+
+    • 生成 28 个 CPU 的外部中断作为输出
+
+    • 支持查询外部中断源当前的中断状态
+
+    • 支持将多个中断源映射到单个 CPU 中断（即共享中断）
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节中断矩阵。
+
+
+4.1.3.5 事件任务矩阵
+
+事件任务矩阵 (ETM) 允许将来自任何指定外设的事件映射到任何指定外设的任务，使外设能够在没有 CPU 干预
+的情况下执行指定任务。能够产生事件、接收任务的外设有 GPIO、LED PWM、通用定时器、RTC 定时器、系
+统定时器、MCPWM、温度传感器、ADC、I2S、LP CPU、GDMA 和 PMU。
+
+特性
+
+    • 50 个可独立使能、配置的通道
+
+    • 支持从多个外设接收 124 种事件
+
+    • 支持为多个外设生成 130 种任务
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节事件任务矩阵。
+
+
+4.1.3.6 系统定时器
+
+ESP32-C6 芯片中的系统定时器 (SYSTIMER) 是一个 52 位定时器，可用于为操作系统生成滴答中断，或作为通
+用定时器生成周期性或一次性中断。
+
+特性
+
+    • 两个 52 位计数器和三个 52 位比较器
+
+    • 52 位报警值和 26 位报警周期
+
+
+
+乐鑫信息科技                           41           ESP32-C6 系列芯片技术规格书 v1.5
+                              反馈文档意见
+4   功能描述
+
+
+    • 两种报警模式：单次报警模式和周期报警模式
+
+    • 三个比较器根据配置的报警值或报警周期生成三个独立中断
+
+    • 在 Deep-sleep 或 Light-sleep 后，能够通过软件加载 RTC 定时器记录的睡眠时间
+
+    • 支持当 CPU 暂停或处于 OCD 模式时，时钟计数器也暂停
+
+    • 支持输出实时报警的事件 (event)
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节系统定时器。
+
+
+4.1.3.7 电源管理单元
+
+ESP32-C6 具有先进的电源管理单元 (PMU) ，可以灵活地为芯片的不同电源域供电，实现芯片性能、功耗和唤
+醒延迟之间的最佳平衡。
+
+ESP32-C6 的 LP CPU 使得芯片能够在大多数电源域关闭的 Deep-sleep 模式下运行，
+                                                   从而实现极低的功耗。
+
+配置 PMU 的程序较为复杂。为针对典型场景简化电源管理，ESP32-C6 具有以下预设功耗模式，可给不同电源
+域组合供电：
+
+    • Active 模式 – 芯片具有完整的处理能力，支持连续的无线通信。所有模块均上电。
+
+    • Modem-sleep 模式 – 芯片 CPU 可持续运行，但仅支持间歇性的无线通信。HP CPU、所有 HP 外设和 LP
+     系统保持上电，但 RF 电路和无线 MAC 及基带仅在需要传输时上电。
+
+    • Light-sleep 模式 – 芯片唤醒后不需要重新初始化上下文，即可继续运行。所有 HP 外设和 LP 系统默认保
+     持上电。
+
+    • Deep-sleep 模式 – 芯片功耗降至最低，但需要更长时间唤醒。仅 LP 系统组件（LP SRAM、RTC 定时器、
+     欠压检测器、电源管理单元等）默认上电。
+
+每个功耗模式下上电的模块，可参考图 ESP32-C6 功能框图。
+
+设备在不同功耗模式下的功耗，请参见章节 5.6 功耗特性。
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 低功耗管理。
+
+
+4.1.3.8 定时器组
+
+ESP32-C6 芯片中的定时器组 (TIMG) 可用于准确设定时间间隔、在一定间隔后触发（周期或非周期的）中断或充
+当硬件时钟。ESP32-C6 有两个定时器组，每个定时器组包含一个通用定时器和一个主系统看门狗定时器。
+
+特性
+
+    • 16 位预分频器
+
+    • 54 位自动重新加载计数器，可向上、向下计数
+
+    • 实时读取时基计数器的值
+
+    • 暂停、恢复、禁用时间基准计数器
+
+    • 可配置的报警产生机制
+
+    • 定时器值重新加载（报警时自动重新加载或软件控制即时重新加载）
+
+    • RTC 慢速时钟频率计算
+
+
+
+乐鑫信息科技                              42           ESP32-C6 系列芯片技术规格书 v1.5
+                                 反馈文档意见
+4   功能描述
+
+
+    • 电平触发中断
+
+    • 支持输出实时报警事件
+
+    • 支持多个 ETM 任务和事件
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 定时器组 (TIMG)。
+
+
+4.1.3.9 看门狗定时器
+
+ESP32-C6 中的看门狗定时器 (WDT) 可用于检测和处理系统故障。ESP32-C6 有三个数字看门狗定时器：两个
+在定时器组中 (MWDT) ，一个在 RTC 模块中 (RWDT) 。此外，还有一个称为超级看门狗 (SWD) 的模拟看门狗定
+时器，有助于防止系统在异常状态下运行。
+
+特性
+
+    • 数字看门狗定时器：
+
+      – 四个阶段，每个阶段都可配置超时时间和超时动作
+
+      – 超时动作：中断、CPU 复位、内核复位、系统复位（仅 RWDT）
+
+      – 阶段 0 Flash 启动保护（SPI Boot 模式）
+
+      – 写保护，使能时寄存器仅可读取
+
+      – 32 位超时计数器
+
+    • 模拟看门狗定时器：
+
+      – 超时周期略小于 1 秒
+
+      – 超时动作：中断、系统复位
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节看门狗定时器。
+
+
+4.1.3.10 权限控制
+
+ESP32-C6 中的权限控制模块负责管理对内存和外设寄存器的访问权限。它由两部分组成：PMP（物理内存保
+护）和 APM（访问权限管理）。
+
+特性
+
+    • 对 ROM、HP 内存、HP 外设、LP 内存和 LP 外设地址空间的访问权限管理
+
+    • APM 支持每个主机（如 DMA）在四种安全模式中选择一种
+
+    • 支持最多 16 个地址范围的访问权限配置
+
+    • 中断功能和异常信息记录
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节权限控制 (PMS)。
+
+
+4.1.3.11 系统寄存器
+
+ESP32-C6 芯片中的系统寄存器用于配置多种辅助芯片功能。
+
+
+
+
+乐鑫信息科技                                 43    ESP32-C6 系列芯片技术规格书 v1.5
+                                  反馈文档意见
+4   功能描述
+
+
+特性
+
+    • 控制外部内存加密和解密
+
+    • 控制 HP/LP 核心调试
+
+    • 控制总线超时保护
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节系统寄存器 (HP_SYSREG)。
+
+
+4.1.3.12 辅助调试
+
+辅助调试可以帮助在软件调试过程中定位错误和问题，提供各种监视能力和日志记录功能，以帮助高效地识别
+和解决软件错误。
+
+特性
+
+    • 读写监测：监测 HP CPU 是否在限定的存储器地址范围内进行读写操作
+
+    • 栈指针 (SP) 监测：防止栈溢出或错误的推入/弹出操作
+
+    • 程序计数器 (PC) 记录：记录 PC，可以获得上一次 HP CPU 复位时的 PC 值
+
+    • 总线写操作记录：当 HP CPU、LP CPU 或 DMA 写了某个特定值时，会记录总线写操作信息
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节辅助调试 (ASSIST_DEBUG)。
+
+
+4.1.4 加密和安全组件
+本章节描述了集成在芯片中用于保护数据和操作的安全功能。
+
+
+4.1.4.1 AES 加速器
+
+ESP32-C6 内置 AES（高级加密标准）硬件加速器可使用 AES 算法，完成数据的加解密运算，具有 Typical AES
+和 DMA-AES 两种工作模式。整体而言，相比基于纯软件的 AES 运算，AES 硬件加速器能够极大地提高运算速
+度。
+
+特性
+
+    • Typical AES 工作模式
+
+       – AES-128/AES-256 加解密运算
+
+    • DMA-AES 工作模式
+
+       – AES-128/AES-256 加解密运算
+
+       – 块（加密）模式
+
+           * ECB (Electronic Codebook)
+
+           * CBC (Cipher Block Chaining)
+
+           * OFB (Output Feedback)
+
+           * CTR (Counter)
+
+           * CFB8 (8-bit Cipher Feedback)
+
+
+乐鑫信息科技                                        44     ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+4   功能描述
+
+
+           * CFB128 (128-bit Cipher Feedback)
+
+       – 中断发生
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 AES 加速器 (AES)。
+
+
+4.1.4.2 ECC 加速器
+
+ECC 加速器可以加速基于椭圆曲线密码学（ECC）算法和派生算法（如 ECDSA）的计算，这两种算法相对于
+RSA 算法的优势在于，使用较小长度的公钥就能够提供相当等级的加密安全性。
+
+特性
+
+    • 支持两种不同的椭圆曲线（P-192 和 P-256）
+
+    • 六种工作模式，支持功能包括标准点验证、标准点乘、Jacobian 点验证、Jacobian 点乘
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 ECC 加速器 (ECC)。
+
+
+4.1.4.3 HMAC 加速器
+
+HMAC 加速器 (HMAC) 模块用于使用 SHA-256 哈希算法和 RFC 2104 中描述的密钥计算信息认证码 (MAC) 。它
+提供了硬件支持的 HMAC 计算，显著降低了软件复杂性，提高了性能。
+
+特性
+
+    • 使用标准 HMAC-SHA-256 算法
+
+    • 基于 eFuse 密钥的 HMAC-SHA-256 算法计算
+
+       – 为提高安全性，软件在下行模式下无法访问其计算结果
+
+       – 软件在上行模式下可访问其计算结果
+
+    • 下行模式下，支持生成 RSA 数字签名外设 (RSA_DS) 所需的密钥
+
+    • 下行模式下，支持重启软禁用的 JTAG
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 HMAC 加速器。
+
+
+4.1.4.4 RSA 加速器
+
+RSA 加速器可为多种运用于“RSA 非对称式加密演算法”的高精度计算提供硬件支持，能够极大地降低此类运算
+的运行时间和软件复杂度。与纯软件 RSA 算法相比，硬件 RSA 加速器的运算速度更快。
+
+特性
+
+    • 大数模幂运算（支持两个加速选项），运算子位宽最高支持 3072 位
+
+    • 大数模乘运算，运算子位宽最高支持 3072 位
+
+    • 大数乘法，运算子位宽最高支持 1536 位
+
+    • 多种运算子位宽
+
+    • 计算完成时触发中断
+
+更多信息，请参考《ESP32-C6 技术参考手册》 > 章节 RSA 加速器。
+
+
+乐鑫信息科技                                          45   ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+4   功能描述
+
+
+
+4.1.4.5 SHA 加速器
+
+SHA 加速器 (SHA) 是一种硬件加速器，与纯软件相比能够极大地提高 SHA 算法运算速度。
+
+特性
+
+    • 支持多种 SHA 算法：SHA-1、SHA-224 和 SHA-256
+
+    • 两种工作模式：基于 CPU 的 Typical SHA 和基于 DMA 的 DMA-SHA
+
+更多更多信息，请参考《ESP32-C6 技术参考手册》 > 章节 SHA 加速器 (SHA)。
+
+
+4.1.4.6 RSA 数字签名外设
+
+ESP32-C6 芯片中的 RSA 数字签名外设 (RSA_DS) 模块可通过硬件加速高效生成基于 RSA 的数字签名。
+
+特性
+
+    • 支持长度最大为 3072 位的 RSA 数字签名密钥
+
+    • 支持仅限 RSA_DS 读取的加密私钥数据
+
+    • 支持 SHA-256 摘要，用于保护私钥数据免遭攻击者篡改
+
+更多更多信息，请参考《ESP32-C6 技术参考手册》 > 章节 RSA 数字签名外设 (RSA_DS)。
+
+
+4.1.4.7 片外存储器加密与解密
+
+ESP32-C6 芯片中的片外存储器加密与解密 (XTS_AES) 模块为用户在外部存储器 (flash) 中存储的应用程序代码
+和数据提供安全保障。
+
+特性
+
+    • 使用通用 XTS-AES 算法，符合 IEEE Std 1619-2007
+
+    • 支持手动加密，需要软件参与
+
+    • 支持高速自动解密，无需软件参与
+
+    • 由寄存器配置、eFuse 参数、启动 (boot) 模式共同决定开启/关闭加解密功能
+
+    • 支持可配置的抗 DPA 攻击功能
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节片外存储器加密与解密 (XTS_AES)。
+
+
+4.1.4.8 随机数生成器
+
+ESP32-C6 中的随机数生成器 (RNG) 是一个真随机数生成器，从物理过程中生成用于加密操作的 32 位随机
+数。
+
+特性
+
+    • 随机数发生器的熵源
+
+       – SAR ADC、高速 ADC 两者的热噪声
+
+
+
+乐鑫信息科技                                  46            ESP32-C6 系列芯片技术规格书 v1.5
+                                    反馈文档意见
+4   功能描述
+
+
+      – 异步时钟不匹配
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节随机数生成器 (RNG)。
+
+
+
+
+乐鑫信息科技                        47         ESP32-C6 系列芯片技术规格书 v1.5
+                           反馈文档意见
+4   功能描述
+
+
+
+4.2 外设
+本章节介绍了芯片上的外设接口，包括扩展芯片功能的通信接口和片上传感器。
+
+
+4.2.1 通讯接口
+本章节介绍了芯片与外部设备和网络进行通信和交互的接口。
+
+
+4.2.1.1 UART 控制器
+
+ESP32-C6 芯片中的 UART 控制器用于芯片与外部 UART 设备之间的异步串行数据传输和接收。ESP32-C6 由
+两个在主系统中的 UART 和一个低功耗 LP UART 组成。
+
+特性
+
+    • 可编程波特率，最高可达 5 MBaud
+
+    • RAM 由 TX FIFO 和 RX FIFO 共用
+
+    • 支持多种数据位和停止位的长度
+
+    • 支持奇偶校验位
+
+    • 特殊字符 AT_CMD 检测
+
+    • 支持 RS485 协议（不适用于 LP UART）
+
+    • 支持 IrDA 协议（不适用于 LP UART）
+
+    • 使用 GDMA 进行高速数据通信（不适用于 LP UART）
+
+    • 接收超时功能
+
+    • UART 作为唤醒源
+
+    • 软件和硬件流控
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 UART 控制器 (UART, LP_UART)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.2 SPI 控制器
+
+ESP32-C6 具有以下 SPI 接口：
+
+    • SPI0，供 ESP32-C6 的 Cache 和 GDMA 访问封装内或封装外 flash
+
+    • SPI1，供 CPU 访问封装内或封装外 flash
+
+    • SPI2，通用 SPI 控制器，可访问通用 DMA 通道
+
+SPI0 和 SPI1 预留给系统使用，只有 SPI2 可供用户使用。
+
+
+
+
+乐鑫信息科技                                48               ESP32-C6 系列芯片技术规格书 v1.5
+                                   反馈文档意见
+4   功能描述
+
+
+SPI0 和 SPI1 特性
+
+    • 支持 Single SPI、Dual SPI、Quad SPI (QPI) 模式
+
+    • 数据传输以字节为单位
+
+SPI2 的特性
+
+    • 支持主机或从机模式
+
+    • 支持 GDMA
+
+    • 支持 Single SPI、Dual SPI、Quad SPI (QPI) 模式
+
+    • 可配置时钟极性 (CPOL) 和相位 (CPHA)
+
+    • 可配置时钟频率
+
+    • 数据传输以字节为单位
+
+    • 可配置读写数据位顺序：最高有效位 (MSB) 优先或最低有效位 (LSB) 优先
+
+    • 主机模式
+
+        – 支持时钟频率高达 80 MHz 的 2 线全双工通信
+
+        – 支持时钟频率高达 80 MHz 的 1 线、2 线、4 线半双工通信
+
+        – 具有六个 FSPICS… 管脚，可与六个独立的 SPI 从机连接
+
+        – 可配置的 CS 设置时间和保持时间
+
+    • 从机模式
+
+        – 支持时钟频率高达 40 MHz 的 2 线全双工通信
+
+        – 支持时钟频率高达 40 MHz 的 1 线、2 线、4 线半双工通信
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 SPI 控制器 (SPI)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.3 I2C 控制器
+
+I2C 控制器支持主机和从机之间使用 I2C 总线进行通信。
+
+特性
+
+    • 两个 I2C 控制器：一个在主系统中 (I2C)，一个在低功耗系统中 (LP I2C)
+
+    • 与多个外部设备通信
+
+    • I2C 可以运行在主机和从机模式，LP I2C 只运行在主机模式
+
+    • 标准模式 (100 Kbit/s) 和快速模式 (400 Kbit/s)
+
+    • 从机模式下的 SCL 时钟拉伸
+
+    • 可编程数字噪声滤波
+
+
+乐鑫信息科技                                           49   ESP32-C6 系列芯片技术规格书 v1.5
+                                         反馈文档意见
+4   功能描述
+
+
+    • 支持 7 位和 10 位寻址以及双地址寻址模式
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 I2C 控制器 (I2C)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.4 I2S 控制器
+
+ESP32-C6 芯片中的 I2S 控制器为多媒体应用程序提供了一种灵活的通信接口，
+                                         特别适用于数字音频应用。
+
+特性
+
+    • 支持主机模式和从机模式
+
+    • 支持全双工和半双工通信
+
+    • 支持 TX 模块和 RX 模块独立工作或同时工作
+
+    • 支持多种音频标准：
+
+       – TDM Philips 标准
+
+       – TDM MSB 对齐标准
+
+       – TDM PCM 标准
+
+       – PDM 标准
+
+    • 支持 PCM 转 PDM TX 接口
+
+    • 可配置高精度 BCK 时钟，最高频率可达 40 MHz
+
+       – 采样频率支持 8 kHz、16 kHz、32 kHz、44.1 kHz、48 kHz、88.2 kHz、96 kHz、128 kHz、192 kHz 等
+
+    • 支持 8/16/24/32 位数据通信
+
+    • 支持 DMA
+
+    • A-law 和 µ-law 压缩/解压缩算法，提高信号的量化信噪比
+
+    • 支持灵活的数据格式控制
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 I2S 控制器 (I2S)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.5 脉冲计数控制器
+
+脉冲计数控制器 (PCNT) 旨在通过跟踪输入脉冲信号的上升沿和下降沿来计数。
+
+特性
+
+    • 四个独立的脉冲计数器，每个计数器有两个通道
+
+    • 递增、递减或停止计数模式
+
+
+乐鑫信息科技                                   50              ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+4   功能描述
+
+
+    • 输入脉冲信号和控制信号的毛刺滤波
+
+    • 选择在输入脉冲信号的上升沿或下降沿进行计数
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 脉冲计数控制器。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.6 USB 串口/JTAG 控制器
+
+ESP32-C6 芯片中的 USB 串口/JTAG 控制器 (USB_SERIAL_JTAG) 集成了与芯片通讯的标准 USB CDC-ACM 串
+口，同时提供了一种 JTAG 调试的便捷方案，无需外部芯片或 JTAG 适配器，节省空间并降低成本。
+
+特性
+
+    • 兼容 USB 2.0 全速标准，传输速度最高可达 12 Mbit/s（注意，该控制器不支持 480 Mbit/s 的高速传输模
+     式）
+
+    • 包含 CDC-ACM 虚拟串口及 JTAG 适配器功能
+
+    • CDC-ACM：
+
+        – 配置虚拟串行功能，在大多数现代操作系统上可实现即插即用
+
+        – 支持主机控制芯片复位和进入下载模式
+
+    • JTAG 适配器：
+
+        – 支持使用紧凑的 JTAG 指令实现与 CPU 调试内核的快速通信
+
+    • 支持通过 ROM 启动代码重新编程 flash
+
+    • 集成内部 PHY
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 USB 串口/JTAG 控制器 (USB_SERIAL_JTAG)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.7 双线汽车接口
+
+双线汽车接口 (TWAI® ) 是一种为车载应用设计的多主机、多播通信协议。TWAI 控制器用于芯片使用该协议的通
+信。
+
+特性
+
+    • 兼容 ISO 11898-1 协议（CAN 规范 2.0）
+
+    • 支持标准帧格式（11 位 ID）和扩展帧格式（29 位 ID）
+
+    • 支持 1 Kbit/s ~ 1 Mbit/s 位速率
+
+    • 多种操作模式：正常模式、只听模式和自测模式（传输无需应答）
+
+    • 特殊发送：单次发送和自发自收
+
+
+乐鑫信息科技                                  51      ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+4   功能描述
+
+
+    • 数据接收过滤器（支持单过滤器和双过滤器模式）
+
+    • 错误检测与处理：错误计数器、可配置错误报警阈值、错误代码记录和仲裁丢失记录、收发器自动待机功
+     能
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 双线汽车接口。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.8 SDIO 从机控制器
+
+ESP32-C6 芯片中的 SDIO 从机控制器提供了对安全数字输入/输出 (SDIO) 设备接口的硬件支持，允许 SDIO 主
+机通过 SDIO 总线协议访问 ESP32-C6。
+
+特性
+
+    • 符合 SDIO 物理层规范 V2.00 和 SDIO 规范 V2.00
+
+    • 支持 SPI、1-bit SDIO 和 4-bit SDIO 传输模式
+
+    • 0 ~ 50 MHz 时钟范围
+
+    • 采样时钟沿或驱动时钟沿可配置
+
+    • 为信息交互设定的特定寄存器
+
+    • 支持 SDIO 中断机制
+
+    • 支持自动填充 SDIO 总线上的发送数据，同样支持自动丢弃 SDIO 总线上的填充数据
+
+    • 高达 512 字节的块大小
+
+    • 主机与从机 (slave) 间有中断向量可以相互中断对方
+
+    • 带有数据传输的 DMA
+
+    • 支持在保持连接的状态下进行休眠唤醒
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 SDIO 从机控制器 (SDIO)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.9 LED PWM 控制器
+
+LED PWM 控制器 (LEDC) 用于生成用于 LED 控制的 PWM 信号。
+
+特性
+
+    • 六个独立的 PWM 生成器
+
+    • 最大 PWM 占空比精度为 20 位
+
+    • 四个独立的定时器，具有 20 位计数器、可配置的时钟小数分频器和计数器溢出值
+
+
+
+乐鑫信息科技                                      52   ESP32-C6 系列芯片技术规格书 v1.5
+                                       反馈文档意见
+4   功能描述
+
+
+    • 可调节 PWM 信号输出的相位
+
+    • PWM 占空比微调
+
+    • 占空比自动渐变
+
+       – 占空比线性渐变 — 即一个占空比渐变区间
+
+       – 占空比伽马渐变 — 每个 PWM 生成器最多可生成 16 个占空比渐变区间，每个区间可独立配置的渐
+        变方向（增加或减少）、变化步长、变化次数和变化频率
+
+    • 在低功耗模式（Light-sleep 模式）下输出 PWM 信号
+
+    • 支持事件任务矩阵 (ETM) 的事件生成和任务响应
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 LED PWM 控制器。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.10 电机控制脉宽调制器
+
+电机控制脉宽调制器 (MCPWM) 可用于驱动数字电机和智能灯。MCPWM 分为五个主要模块：PWM 定时器、
+PWM 操作器、捕获模块、故障检测模块和事件任务矩阵 (ETM) 模块。
+
+特性
+
+    • 三个 PWM 定时器，用于精确计时和频率控制
+
+       – 每个 PWM 定时器都有一个专用的 8 位时钟预分频器
+
+       – PWM 定时器中的 16 位计数器的工作模式包括：递增计数模式，递减计数模式，递增递减循环计数
+        模式
+
+       – 硬件/软件同步可以触发 PWM 定时器重载和预分频的重启，硬件同步源可选择
+
+    • 三个 PWM 操作器，用于生成波形对
+
+       – 六个 PWM 输出，可在几种拓扑结构中运行
+
+       – 死区时间在上升沿和下降沿可配置，并可分别设置
+
+       – 通过高频载波信号调制 PWM 输出，在使用变压器隔离栅极驱动器时可发挥巨大作用
+
+    • 捕获模块，用于基于硬件的信号处理
+
+       – 旋转电机的速度测量
+
+       – 位置传感器脉冲之间的间隔时间测量
+
+       – 脉冲序列信号的周期和占空比测量
+
+       – 从电流/电压传感器的占空比编码信号导出的解码电流或电压振幅
+
+       – 3 个独立的捕获通道，各具备一个 32 位的时间戳寄存器
+
+       – 输入捕获信号可以预分频，边沿极性可选
+
+       – 捕获定时器可以与 PWM 定时器或外部信号同步
+
+
+
+乐鑫信息科技                             53     ESP32-C6 系列芯片技术规格书 v1.5
+                                反馈文档意见
+4   功能描述
+
+
+    • 故障检测模块
+
+       – 出现故障时，可选择在逐周期模式或一次性模式下处理
+
+       – 故障条件可强制 PWM 输出高或低电平
+
+    • 支持事件任务矩阵 (ETM) 的事件生成和任务响应
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 电机控制脉宽调制器 (MCPWM)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.11 红外遥控
+
+红外遥控 (RMT) 用于控制发送和接收红外遥控信号。
+
+特性
+
+    • 四个通道，用于发送和接收红外遥控信号
+
+    • 每个通道具有独立的发送和接收功能
+
+    • 支持普通发送/接收模式、乒乓发送/接收模式、持续发送模式
+
+    • 在发送脉冲上调制和在接收脉冲上解调
+
+    • 用于改善信号接收的接收滤波
+
+    • 能够同时在多个通道上发送数据
+
+    • 每个发送通道都有时钟分频器计数器、状态机和发射器
+
+    • 根据通道号默认分配 RAM block 给通道
+
+    • RAM 的 16 位脉冲编码由 level 和 period 组成
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 红外遥控 (RMT)。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.1.12 并行 IO 控制器
+
+ESP32-C6 芯片中的并行 IO 控制器 (PARLIO) 通过 GDMA 在并行总线上实现外部设备与内部存储器之间的数据
+传输。它由一个发送器（TX 模块）和一个接收器（RX 模块）组成，使其成为连接各种外设的通用接口。
+
+特性
+
+    • 支持传输数据总线位宽配置为 1/2/4/8/16 位
+
+    • 支持 16 位半双工传输和 8 位全双工传输
+
+    • 在 1/2/4 位模式下，支持在一个字节范围内对数据位重新排序
+
+    • RX 模块支持 15 种接收模式，可分为电平使能模式、脉冲使能模式和软件使能模式三大类
+
+
+乐鑫信息科技                                    54   ESP32-C6 系列芯片技术规格书 v1.5
+                                     反馈文档意见
+4   功能描述
+
+
+    • TX 模块可以生成与 TX 对齐的有效信号
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 并行 IO 控制器。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.2 模拟信号处理
+本小节描述芯片上感知和处理现实世界数据的组件。
+
+
+4.2.2.1 SAR ADC
+
+ESP32-C6 有一个逐次逼近型模拟数字转换器 (SAR ADC)，将模拟信号转换为数字表示。
+
+特性
+
+    • 支持 12 位采样分辨率
+
+    • 支持采集最多七个管脚上的模拟电压
+
+    • 电压转换时配置输入信号的衰减
+
+    • 软件触发的单次采样
+
+    • 专用定时器触发的多通道扫描
+
+    • 连续 DMA 转换，实现无缝数据传输
+
+    • 两个滤波系数可配置的滤波器
+
+    • 可以触发中断的阈值监控
+
+    • 支持事件任务矩阵
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 片上传感器与模拟信号处理。
+
+管脚分配
+
+详见章节 2.3.5 外设管脚分配。
+
+
+4.2.2.2 温度传感器
+
+ESP32-C6 芯片中的温度传感器可以实时监测芯片内部的温度变化。
+
+特性
+
+    • 测量范围：–40°C ~ 125°C
+
+    • 支持软件触发，且一旦触发后，可持续读取数据
+
+    • 支持硬件自动触发和温度监测
+
+    • 支持根据使用环境配置温度偏移，提高测试精度
+
+    • 支持测量范围可调节
+
+
+
+乐鑫信息科技                          55           ESP32-C6 系列芯片技术规格书 v1.5
+                              反馈文档意见
+4   功能描述
+
+
+    • 两种自动监测唤醒模式：绝对值模式和变化量模式
+
+    • 支持事件任务矩阵
+
+更多信息，请参考 《ESP32-C6 技术参考手册》 > 章节 片上传感器与模拟信号处理。
+
+
+
+
+乐鑫信息科技                      56        ESP32-C6 系列芯片技术规格书 v1.5
+                         反馈文档意见
+4   功能描述
+
+
+
+4.3 无线通信
+本节描述了芯片的无线通信能力，涵盖无线电模块、Wi-Fi、蓝牙和 802.15.4。
+
+
+4.3.1 无线电
+本小节描述了嵌入在芯片中用于实现无线通信和数据交换的基本无线电模块，主要包括：
+
+    • 2.4 GHz 接收器
+
+    • 2.4 GHz 发射器
+
+    • 偏置 (Bias) 和线性稳压器
+
+    • Balun 和收发切换器
+
+    • 时钟生成器
+
+
+4.3.1.1 2.4 GHz 接收器
+
+2.4 GHz 接收器将 2.4 GHz 射频信号解调为正交基带信号，并用两个高精度、高速的 ADC 将后者转为数字信号。
+为了适应不同的信道情况，ESP32-C6 集成了 RF 滤波器、自动增益控制 (AGC)、DC 偏移补偿电路和基带滤波
+器。
+
+
+4.3.1.2 2.4 GHz 发射器
+
+2.4 GHz 发射器将正交基带信号调制为 2.4 GHz 射频信号，使用大功率互补金属氧化物半导体 (CMOS) 功率放
+大器驱动天线。数字校准进一步改善了功率放大器的线性。
+
+为了抵消射频接收器的瑕疵，ESP32-C6 还另增了校准措施，例如:
+
+    • 载波泄露消除
+
+    • I/Q 相位匹配
+
+    • 基带非线性抑制
+
+    • 射频非线性抑制
+
+    • 天线匹配
+
+这些内置校准措施缩短了产品的测试时间，并且不再需要测试设备。
+
+
+4.3.1.3 时钟生成器
+
+时钟生成器为接收器和发射器生成 2.4 GHz 正交时钟信号，所有部件均集成于芯片上，包括电感、变容二极管、
+环路滤波器、线性稳压器和分频器。
+
+时钟生成器带有内置校准电路和自测电路。运用自主知识产权的优化算法，对正交时钟的相位和相位噪声进行
+优化处理，使接收器和发射器都有最好的性能表现。
+
+
+4.3.2 Wi-Fi
+本小节描述了芯片的 Wi-Fi 能力，用于实现高速无线通信。
+
+
+
+
+乐鑫信息科技                       57         ESP32-C6 系列芯片技术规格书 v1.5
+                           反馈文档意见
+4   功能描述
+
+
+
+4.3.2.1 Wi-Fi 无线电和基带
+
+ESP32-C6 Wi-Fi 射频和基带支持以下特性：
+
+    • 支持 IEEE 802.11b/g/n/ax
+
+    • 2.4 GHz 频段，支持 1T1R
+
+    • 802.11ax
+
+         – 支持仅 20 MHz 非接入点工作模式 (20MHz-only non-AP mode)
+
+         – MCS0 ~MCS9
+
+         – 上行、下行正交频分多址 (OFDMA) 接入
+
+         – 下行全带宽、部分带宽多用户多输入多输出接入 (MU-MIMO)
+
+         – 更长的 OFDM 符号 (OFDM symbol)，0.8、1.6、3.2 µs 保护间隔
+
+         – 双载波调制 (Dual carrier modulation, DCM)，最高支持 16-QAM 正交幅度调制
+
+         – 单用户/多用户波束成形接收端 (SU/MU Beamformee)
+
+         – 信道质量指示 (Channel quality indication, CQI)
+
+         – RX 空时分组编码 (STBC)（单空间流）
+
+    • 802.11b/g/n：
+
+         – MCS0 ~MCS7，支持 20 MHz 和 40 MHz 带宽
+
+         – MCS32
+
+         – 数据速率高达 150 Mbps
+
+         – 支持 0.4 µs 保护间隔
+
+    • 可调节的发射功率
+
+    • 天线分集
+     ESP32-C6 支持基于外部射频开关的天线分集与选择。外部射频开关由一个或多个 GPIO 管脚控制，用来
+     选择最合适的天线以减少信道衰落的影响。
+
+
+4.3.2.2 Wi-Fi MAC
+
+ESP32-C6 完全遵循 IEEE 802.11 b/g/n/ax Wi-Fi MAC 协议栈，支持分布式控制功能 (DCF) 下的基本服务集 (BSS)
+STA 和 SoftAP 操作。支持通过最小化主机交互来优化有效工作时长，以实现功耗管理。
+
+ESP32-C6 Wi-Fi MAC 自行支持的底层协议功能如下：
+
+    • 4 × 虚拟 Wi-Fi 接口
+
+    • 同时支持基础结构型网络 (Infrastructure BSS) Station 模式、SoftAP 模式、Station + SoftAP 模式和混杂模
+     式
+
+    • RTS 保护，CTS 保护，立即块确认 (Immediate Block ACK)
+
+    • 分片和重组 (Fragmentation and defragmentation)
+
+    • TX/RX A-MPDU，TX/RX A-MSDU
+
+
+
+乐鑫信息科技                                          58        ESP32-C6 系列芯片技术规格书 v1.5
+                                            反馈文档意见
+4   功能描述
+
+
+    • 传输机会 (TXOP)
+
+    • 无线多媒体 (WMM)
+
+    • GCMP、CCMP、TKIP、WAPI、WEP、BIP、WPA2 个人/企业模式 (WPA2-PSK/WPA2-Enterprise) 及 WPA3
+       个人/企业模式 (WPA3-PSK/WPA3-Enterprise)
+
+    • 自动 Beacon 监测（硬件 TSF）
+
+    • 802.11mc FTM
+
+        说明：
+        部分芯片版本该功能不可用，详见 《ESP32-C6 系列芯片勘误表》。
+
+
+
+    • 802.11ax 支持以下特性：
+
+         – 请求端目标唤醒时间机制 (Target wake time, TWT)
+
+         – 多个基本服务集标识符 (Multiple BSSIDs)
+
+         – 触发响应调度 (Triggered response scheduling)
+
+         – 多用户传送要求 (MU-RTS)、多用户块确认请求 (MU-BAR)、多站点用户块确认 (M-BA)
+
+         – 协议数据单元内的省电模式 (Intra-PPDU power saving)
+
+         – 两个网络分配向量 (NAV)
+
+         – BSS 着色机制 (BSS coloring）
+
+         – 空间复用 (Spatial reuse)
+
+         – 上行功率余量 (Uplink power headroom)
+
+         – 运行模式控制 (Operating mode control)
+
+         – 缓存状态报告 (Buffer status report)
+
+         – TXOP 持续时间 RTS 阈值
+
+         – 上行随机接入机制 (UL-OFDMA random access, UORA)
+
+
+4.3.2.3 网络特性
+
+乐鑫提供的固件支持 TCP/IP 联网、ESP-WIFI-MESH 联网或其他 Wi-Fi 联网协议，同时也支持 TLS 1.0、1.1、
+1.2。
+
+
+4.3.3 蓝牙 LE
+本小节描述了芯片的蓝牙能力，用于实现低功耗、短距离应用的无线通信。ESP32-C6 系列芯片包含了一个低功
+耗蓝牙 (Bluetooth Low Energy) 子系统，集成了硬件链路层控制器、射频/调制解调器模块和功能齐全的软件协
+议栈。低功耗蓝牙子系统支持 Bluetooth 5 和 Bluetooth mesh。
+
+
+4.3.3.1 低功耗蓝牙物理层
+
+ESP32-C6 系列芯片低功耗蓝牙物理层支持以下特性：
+
+    • 1 Mbps PHY
+
+
+乐鑫信息科技                                         59     ESP32-C6 系列芯片技术规格书 v1.5
+                                           反馈文档意见
+4   功能描述
+
+
+    • 2 Mbps PHY，用于提升传输速率
+
+    • Coded PHY (125 Kbps and 500 Kbps)，用于提升传输距离
+
+    • 硬件实现 Listen Before Talk (LBT)
+
+
+4.3.3.2 低功耗蓝牙链路控制器
+
+ESP32-C6 系列芯片低功耗蓝牙链路控制器支持以下特性：
+
+    • 广播扩展 (Advertising Extensions)，用于增强广播能力，可以广播更多的智能数据
+
+    • 多广播
+
+    • 支持同时广播和扫描
+
+    • 多连接，支持中心设备 (Central) 和外围设备 (Peripheral) 同时运行
+
+    • 自适应跳频和信道选择
+
+    • 信道选择算法 #2 (Channel Selection Algorithm #2)
+
+    • 功率控制 (LE Power Control)
+
+    • 连接参数更新
+
+    • 高速不可连接广播 (High Duty Cycle Non-Connectable Advertising)
+
+    • LE Privacy 1.2
+
+    • 数据包长度扩展 (LE Data Packet Length Extension)
+
+    • 链路层扩展扫描过滤策略 (Link Layer Extended Scanner Filter policies)
+
+    • 低速可连接定向广播 (Low duty cycle directed advertising)
+
+    • 链路层加密
+
+    • LE Ping
+
+
+4.3.4 802.15.4
+本小节描述了芯片与 802.15.4 标准的兼容性，用于实现低功耗、短距离应用的无线通信。ESP32-C6 拥有一个
+标准 802.15.4 子系统，集成了 PHY 和 MAC 层，可支持 Thread、Zigbee、Matter、HomeKit、MQTT 等多种协
+议。
+
+
+4.3.4.1 802.15.4 物理层
+
+ESP32-C6 802.15.4 物理层支持以下特性：
+
+    • 2.4 GHz 频段 O-QPSK PHY
+
+    • 250 Kbps 数据率
+
+    • 支持 RSSI 和 LQI
+
+
+
+
+乐鑫信息科技                                        60               ESP32-C6 系列芯片技术规格书 v1.5
+                                          反馈文档意见
+4   功能描述
+
+
+
+4.3.4.2 802.15.4 MAC
+
+ESP32-C6 支持 IEEE 标准 802.15.4-2015 中定义的主要特性，包括：
+
+    • CSMA/CA
+
+    • 主动扫描和能量检测
+
+    • HW 帧过滤
+
+    • HW 自动应答
+
+    • HW 自动帧等待
+
+    • 协调采样侦听（Coordinated sampled listening）
+
+
+
+
+乐鑫信息科技                                        61   ESP32-C6 系列芯片技术规格书 v1.5
+                                       反馈文档意见
+5   电气特性
+
+
+
+5 电气特性
+
+5.1 绝对最大额定值
+超出表 5-1 绝对最大额定值 的绝对最大额定值可能导致器件永久性损坏。这只是强调的额定值，不涉及器件在
+这些或其它条件下超出章节 5.2 建议工作条件 技术规格指标的功能性操作。长时间暴露在绝对最大额定条件下
+可能会影响设备的可靠性。
+
+                                   表 5-1. 绝对最大额定值
+
+                   参数              说明          最小值       最大值     单位
+                   输入电源管脚 1        允许输入电压        –0.3     3.6    V
+                   Ioutput   2     IO 输出总电流        —     1000    mA
+                   TST ORE         存储温度          –40      150    °C
+                   1 更多关于输入电源管脚的信息，见章节 2.5.1 电源管脚。
+                   2 在 25 °C 的环境温度下连续 24 小时保持所有 IO 管脚拉高并
+                     接地，设备工作完全正常。
+
+
+
+5.2 建议工作条件
+
+                                   表 5-2. 建议工作条件
+
+           参数 1                    说明          最小值       典型值     最大值        单位
+           VDDA1, VDDA2, VDDA3P3   建议输入电压          3.0     3.3        3.6    V
+           VDDPST1                 建议输入电压          3.0     3.3        3.6    V
+           VDD_SPI（输入）             —               3.0     3.3        3.6    V
+           VDDPST2 2, 3            建议输入电压          3.0     3.3        3.6    V
+           IV DD                   输入总电流           0.5      —         —      A
+           TA                      环境温度           –40       —        105     °C
+           1 请结合章节 2.5 电源 阅读。
+           2 使用 VDDPST2 给 VDD_SPI 供电时（见章节 2.5.2 电源管理），应考虑 R
+                                                                            SP I 的
+
+             电压降。更多信息，请参考章节 5.3 VDD_SPI 输出特性。
+           3 写 eFuse 时，由于烧录 eFuse 的电路较敏感，VDDPST2 的电压应不超过 3.3 V。
+
+
+
+
+乐鑫信息科技                                    62              ESP32-C6 系列芯片技术规格书 v1.5
+                                        反馈文档意见
+5     电气特性
+
+
+
+5.3 VDD_SPI 输出特性
+
+                                      表 5-3. VDD_SPI 内部和输出特性
+
+                    参数        说明 1                                        典型值         单位
+                              VDD_SPI 连接 3.3 V flash 时，由 VDDPST2 经
+                    RSP I                                                     3       Ω
+                              R   供电 2
+                               SP I
+
+                    1 请结合章节 2.5.2 电源管理 阅读。
+                    2 VDDPST2 需高于 VDD_flash_min + I_flash_max * R
+                                                                    SP I ，
+
+                     其中
+                            • VDD_flash_min – flash 的最小工作电压
+                            • I_flash_max – flash 的最大工作电流
+
+
+
+5.4 直流电气特性 (3.3 V, 25 °C)
+
+                                      表 5-4. 直流电气特性 (3.3 V, 25 °C)
+
+    参数         说明                                             最小值            典型值           最大值         单位
+    CIN        管脚电容                                                  —            2               —    pF
+                                                            0.75 × VDD
+    VIH        高电平输入电压                                               1            —    VDD 1 + 0.3     V
+
+                                                                                          0.25 × VDD
+    VIL        低电平输入电压                                            –0.3            —                1   V
+
+    IIH        高电平输入电流                                               —            —              50    nA
+    IIL        低电平输入电流                                               —            —              50    nA
+    VOH    2   高电平输出电压                                      0.8 × VDD 1           —             —      V
+    VOL    2   低电平输出电压                                               —            —    0.1 × VDD 1     V
+               高电平拉电流 (VDD 1 = 3.3 V, V     OH >= 2.64 V,
+    IOH                                                              —        40                  —    mA
+               PAD_DRIVER = 3)
+               低电平灌电流 (VDD 1 = 3.3 V, VOL = 0.495 V,
+    IOL                                                              —        28                  —    mA
+               PAD_DRIVER = 3)
+    RP U       内部弱上拉电阻                                               —        45                  —    kΩ
+    RP D       内部弱下拉电阻                                               —        45                  —    kΩ
+               芯片复位释放电压（CHIP_PU 应满足电压范                      0.75 × VDD
+    VIH_nRST                                                         1            —    VDD 1 + 0.3     V
+               围）
+                                                                                          0.25 × VDD
+    VIL_nRST   芯片复位电压（CHIP_PU 应满足电压范围）                            –0.3            —                1   V
+
+    1 VDD – 各个电源域电源管脚的电压。
+    2V
+          OH 和 VOL 为负载是高阻条件下的测试值。
+
+
+
+
+5.5 ADC 特性
+本章节数据是在 ADC 外接 100 nF 电容、输入为 DC 信号、25 °C 环境温度、Wi-Fi 关闭条件下的测量结果。
+
+
+
+
+乐鑫信息科技                                             63                 ESP32-C6 系列芯片技术规格书 v1.5
+                                               反馈文档意见
+5   电气特性
+
+
+                                   表 5-5. ADC 特性
+
+                      符号                  最小值        最大值       单位
+                      DNL（差分非线性）1              –8        12    LSB
+                      INL（积分非线性）               –10       10    LSB
+                      采样速度                      —     100     kSPS 2
+                      1 使用滤波器多次采样或计算平均值可以获得更好的
+                        DNL 结果。
+                      2 kSPS (kilo samples-per-second) 表示每秒采样千次。
+
+
+ADC 经硬件校准和 软件校准后的结果如表 5-6 所示。如需更高的精度，可选用其他方法自行校准。
+
+                                  表 5-6. ADC 校准结果
+
+    参数             说明                                                最小值     最大值    单位
+                   ATTEN0，有效测量范围 0 ~ 1000                              –12    12    mV
+                   ATTEN1，有效测量范围 0 ~ 1300                              –12    12    mV
+    总误差
+                   ATTEN2，有效测量范围 0 ~ 1900                              –23    23    mV
+                   ATTEN3，有效测量范围 0 ~ 3300                              –40    40    mV
+
+
+
+    说明：
+    上述 ADC 量程和精度适用于丝印 Date Code（日期代码）为 212023 及之后的芯片，或产品标签 D/C 1 和 D/C 2（装
+    配日期代码）为 2321 及之后的芯片。若早于以上代码，请联系乐鑫商务根据批次提供实际量程和精度。
+
+    有关芯片丝印 Date Code 和产品标签 D/C 的描述，请参考《乐鑫芯片包装信息》。
+
+
+
+
+5.6 功耗特性
+5.6.1 Active 模式下的功耗
+下列功耗数据是基于 3.3 V 供电电源、25 °C 环境温度的条件下测得。
+
+所有发射功耗数据均基于 100% 占空比测得。
+
+所有接收功耗数据均是在外设关闭、CPU 空闲的条件下测得。
+
+                        表 5-7. Active 模式下 Wi-Fi (2.4 GHz) 功耗特性
+
+       工作模式           射频模式           描述                                      峰值 (mA)
+                                     802.11b, 1 Mbps, DSSS @ 21.0 dBm              354
+                                     802.11g, 54 Mbps, OFDM @ 19.5 dBm             300
+                      发射（TX）         802.11n, HT20, MCS7 @ 18.5 dBm                280
+                                     802.11n, HT40, MCS7 @ 18.0 dBm                268
+       Active（射频工作）
+                                     802.11ax, MCS9, @ 16.5 dBm                    252
+                                     802.11b/g/n, HT20                             78
+                      接收 (RX)        802.11n, HT40                                 82
+                                                                                见下页
+
+
+
+乐鑫信息科技                                    64                  ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+5   电气特性
+
+
+                                         表 5-7 – 接上页
+     工作模式              射频模式                描述                                 峰值 (mA)
+                                           802.11ax, HE20                                 78
+
+
+
+                              表 5-8. Active 模式下低功耗蓝牙功耗特性
+
+     工作模式              射频模式                描述                                 峰值 (mA)
+                                           低功耗蓝牙 @ 20.0 dBm                           315
+                       发射（TX）              低功耗蓝牙 @ 9.0 dBm                            190
+     Active（射频工作）                          低功耗蓝牙 @ 0 dBm                              130
+                                           低功耗蓝牙 @–15.0 dBm                               94
+                       接收 (RX)             低功耗蓝牙                                          71
+
+
+                              表 5-9. Active 模式下 802.15.4 功耗特性
+
+     工作模式              射频模式                描述                                 峰值 (mA)
+                                           802.15.4 @ 20.0 dBm                        305
+                       发射（TX）              802.15.4 @ 12.0 dBm                        187
+     Active（射频工作）                          802.15.4 @ 0 dBm                           119
+                                           802.15.4 @–15.0 dBm                            92
+                       接收 (RX)             802.15.4                                       74
+
+
+
+5.6.2 其他功耗模式下的功耗
+
+                               表 5-10. Modem-sleep 模式下的功耗
+
+                                CPU 频率                           典型值 (mA)
+           模式                    (MHz)      描述         外设时钟全关         外设时钟全开 1
+                                            CPU 工作               27            38
+                                     160
+                                            CPU 空闲               17            28
+           Modem-sleep 2, 3
+                                            CPU 工作               19            30
+                                     80
+                                            CPU 空闲               14            25
+           1 实际情况下，外设在不同工作状态下电流会有所差异。
+           2 Modem sleep 模式下，Wi-Fi 设有时钟门控。
+           3 Modem-sleep 模式下，访问 flash 时功耗会增加。
+
+
+
+                                  表 5-11. 低功耗模式下的功耗
+
+       工作模式          说明                                                     典型值 (µA)
+                     CPU、无线通讯模块电源关闭，外设时钟关闭，所有 GPIO
+                                                                                    180
+       Light-sleep   设置为高阻抗状态
+                     CPU 、无线通讯模块、外设电源关闭，所有 GPIO 设置为高
+                                                                                    35
+                     阻抗状态
+       Deep-sleep    RTC 定时器和 LP 存储器上电                                               7
+                                                                               见下页
+
+
+乐鑫信息科技                                          65               ESP32-C6 系列芯片技术规格书 v1.5
+                                           反馈文档意见
+5   电气特性
+
+
+                                       表 5-11 – 接上页
+        工作模式          说明                                                     典型值 (µA)
+        关闭            CHIP_PU 管脚拉低，芯片关闭                                             1
+
+
+
+5.7 存储器规格
+本节数据来源于存储器供应商的数据手册。以下数值已在设计阶段和/或特性验证中得到确认，但未在生产中进
+行全面测试。设备出厂时，存储器均为擦除状态。
+
+                                      表 5-12. Flash 规格
+
+               参数      说明                     最小值        典型值      最大值     单位
+                       电源电压 (1.8 V)               1.65    1.80     2.00      V
+               VCC
+                       电源电压 (3.3 V)                2.7     3.3      3.6      V
+               FC      最大时钟频率                      80      —        —     MHz
+               —       编程/擦除周期               100,000       —        —        次
+               TRET    数据保留时间                      20      —        —        年
+               TP P    页编程时间                       —       0.8       5    ms
+               TSE     扇区擦除时间 (4 KB)               —       70      500    ms
+               TBE1    块擦除时间 (32 KB)               —       0.2       2       s
+               TBE2    块擦除时间 (64 KB)               —       0.3       3       s
+                       芯片擦除时间 (16 Mb)              —        7       20       s
+                       芯片擦除时间 (32 Mb)              —       20       60       s
+               TCE     芯片擦除时间 (64 Mb)              —       25      100       s
+                       芯片擦除时间 (128 Mb)             —       60      200       s
+                       芯片擦除时间 (256 Mb)             —       70      300       s
+
+
+
+5.8 可靠性
+
+                                    表 5-13. 可靠性认证
+
+    测试项目                    测试条件                                    测试标准
+    HTOL（高温工作寿命）            125 °C，1000 小时                          JESD22-A108
+                            HBM（人体放电模式）1 ± 2000 V                   JS-001
+    ESD（静电放电敏感度)
+                            CDM（充电器件模式）2 ± 1000 V                   JS-002
+                            过电流 ± 200 mA
+    闩锁测试 (Latch-up)                                                 JESD78
+                            过电压 1.5 × VDDmax
+                            烘烤：125 °C，24 小时
+                                                                    J-STD-020、JESD47、
+    预处理测试                   浸泡：三级（30 °C，60% RH，192 小时）
+                                                                    JESD22-A113
+                            回流焊：260 + 0 °C，20 秒，三次
+    TCT（温度循环测试）             –65 °C / 150 °C，500 次循环                 JESD22-A104
+    uHAST（无偏压高加速温
+                            130 °C，85% RH，96 小时                     JESD22-A118
+    湿度应力试验）
+    HTSL（高温贮存寿命）            150 °C，1000 小时                          JESD22-A103
+                                                                                    见下页
+
+
+乐鑫信息科技                                       66                  ESP32-C6 系列芯片技术规格书 v1.5
+                                         反馈文档意见
+5   电气特性
+
+
+                              表 5-13 – 接上页
+    测试项目             测试条件                        测试标准
+    LTSL（低温存储寿命）     –40 °C，1000 小时              JESD22-A119
+    1 JEDEC 文档 JEP155 规定：500 V HBM 能够在标准 ESD 控制流程下安全生产。
+    2 JEDEC 文档 JEP157 规定：250 V CDM 能够在标准 ESD 控制流程下安全生产。
+
+
+
+
+乐鑫信息科技                                67      ESP32-C6 系列芯片技术规格书 v1.5
+                               反馈文档意见
+6   射频特性
+
+
+
+6 射频特性
+本章提供产品的射频特性表。
+
+射频数据是在天线端口处连接射频线后测试所得，包含了射频前端电路带来的损耗。射频前端电路为 0 Ω 电
+阻。
+
+工作信道中心频率范围应符合国家或地区的规范标准。软件可以配置工作信道中心频率范围，具体请参考《ESP
+射频测试指南》。
+
+除非特别说明，射频测试均是在 3.3 V (±5%) 供电电源、25 °C 环境温度的条件下完成。
+
+
+6.1 Wi-Fi 射频
+
+                                  表 6-1. Wi-Fi 射频规格
+
+            名称                                描述
+            工作信道中心频率范围                        2412 ~ 2484 MHz
+            无线标准                              IEEE 802.11b/g/n/ax
+
+
+
+6.1.1 Wi-Fi 射频发射器 (TX) 特性
+
+                 表 6-2. 频谱模板和 EVM 符合 802.11 标准时的发射功率
+
+                                                   最小值         典型值      最大值
+            速率                                      (dBm)      (dBm)     (dBm)
+            802.11b, 1 Mbps, DSSS                         —      21.0       —
+            802.11b, 11 Mbps, CCK                         —      21.0       —
+            802.11g, 6 Mbps, OFDM                         —      20.5       —
+            802.11g, 54 Mbps, OFDM                        —      19.5       —
+            802.11n, HT20, MCS0                           —      19.5       —
+            802.11n, HT20, MCS7                           —      18.5       —
+            802.11n, HT40, MCS0                           —      19.0       —
+            802.11n, HT40, MCS7                           —      18.0       —
+            802.11ax, HE20, MCS0                          —      19.5       —
+            802.11ax, HE20, MCS9                          —      16.5       —
+
+
+
+                              表 6-3. 发射 EVM 测试1
+
+                                                 最小值          典型值       标准限值
+            速率                                     (dB)       (dB)       (dB)
+            802.11b, 1 Mbps, DSSS                     —       –25.5      –10.0
+            802.11b, 11 Mbps, CCK                     —       –25.5      –10.0
+            802.11g, 6 Mbps, OFDM                     —       –26.5       –5.0
+            802.11g, 54 Mbps, OFDM                    —       –29.0      –25.0
+                                                                         见下页
+
+
+
+乐鑫信息科技                                   68                     ESP32-C6 系列芯片技术规格书 v1.5
+                                      反馈文档意见
+6   射频特性
+
+
+                                       表 6-3 – 接上页
+                                                最小值          典型值      标准限值
+             速率                                  (dB)        (dB)      (dB)
+             802.11n, HT20, MCS0                      —      –29.0      –5.0
+             802.11n, HT20, MCS7                      —      –30.0     –27.0
+             802.11n, HT40, MCS0                      —      –28.5      –5.0
+             802.11n, HT40, MCS7                      —      –29.5     –27.0
+             802.11ax, HE20, MCS0                     —      –29.0      –5.0
+             802.11ax, HE20, MCS9                     —      –34.0     –32.0
+              1 发射 EVM 的每个测试项对应的发射功率为表 6-2 频谱模板和 EVM 符
+               合 802.11 标准时的发射功率 中提供的典型值。
+
+
+6.1.2 Wi-Fi 射频接收器 (RX) 特性
+802.11b 标准下的误包率 (PER) 不超过 8%，802.11g/n/ax 标准下不超过 10%。
+
+                                      表 6-4. 接收灵敏度
+
+                                                 最小值          典型值     最大值
+              速率                                     (dBm)    (dBm)    (dBm)
+              802.11b, 1 Mbps, DSSS                     —     –99.2       —
+              802.11b, 2 Mbps, DSSS                     —     –96.8       —
+              802.11b, 5.5 Mbps, CCK                    —     –93.8       —
+              802.11b, 11 Mbps, CCK                     —     –90.0       —
+              802.11g, 6 Mbps, OFDM                     —     –94.0       —
+              802.11g, 9 Mbps, OFDM                     —     –93.2       —
+              802.11g, 12 Mbps, OFDM                    —     –92.6       —
+              802.11g, 18 Mbps, OFDM                    —     –90.0       —
+              802.11g, 24 Mbps, OFDM                    —     –86.8       —
+              802.11g, 36 Mbps, OFDM                    —     –83.2       —
+              802.11g, 48 Mbps, OFDM                    —     –79.0       —
+              802.11g, 54 Mbps, OFDM                    —     –77.6       —
+              802.11n, HT20, MCS0                       —     –93.6       —
+              802.11n, HT20, MCS1                       —     –92.4       —
+              802.11n, HT20, MCS2                       —     –89.6       —
+              802.11n, HT20, MCS3                       —     –86.2       —
+              802.11n, HT20, MCS4                       —     –82.8       —
+              802.11n, HT20, MCS5                       —     –78.8       —
+              802.11n, HT20, MCS6                       —     –77.2       —
+              802.11n, HT20, MCS7                       —     –75.6       —
+              802.11n, HT40, MCS0                       —     –91.0       —
+              802.11n, HT40, MCS1                       —     –90.0       —
+              802.11n, HT40, MCS2                       —     –87.4       —
+              802.11n, HT40, MCS3                       —     –83.8       —
+                                                                      见下页
+
+
+
+乐鑫信息科技                                     69                  ESP32-C6 系列芯片技术规格书 v1.5
+                                        反馈文档意见
+6   射频特性
+
+
+                                    表 6-4 – 接上页
+                                              最小值         典型值        最大值
+           速率                                     (dBm)   (dBm)      (dBm)
+           802.11n, HT40, MCS4                       —    –80.8         —
+           802.11n, HT40, MCS5                       —    –76.6         —
+           802.11n, HT40, MCS6                       —    –75.0         —
+           802.11n, HT40, MCS7                       —    –73.4         —
+           802.11ax, HE20, MCS0                      —    –93.8         —
+           802.11ax, HE20, MCS1                      —    –91.2         —
+           802.11ax, HE20, MCS2                      —    –88.4         —
+           802.11ax, HE20, MCS3                      —    –85.6         —
+           802.11ax, HE20, MCS4                      —    –82.2         —
+           802.11ax, HE20, MCS5                      —    –78.4         —
+           802.11ax, HE20, MCS6                      —    –76.6         —
+           802.11ax, HE20, MCS7                      —    –74.8         —
+           802.11ax, HE20, MCS8                      —    –71.0         —
+           802.11ax, HE20, MCS9                      —    –69.0         —
+
+
+
+                                 表 6-5. 最大接收电平
+
+                                              最小值         典型值        最大值
+           速率                                     (dBm)   (dBm)      (dBm)
+           802.11b, 1 Mbps, DSSS                     —           5      —
+           802.11b, 11 Mbps, CCK                     —           5      —
+           802.11g, 6 Mbps, OFDM                     —           5      —
+           802.11g, 54 Mbps, OFDM                    —           0      —
+           802.11n, HT20, MCS0                       —           5      —
+           802.11n, HT20, MCS7                       —           0      —
+           802.11n, HT40, MCS0                       —           5      —
+           802.11n, HT40, MCS7                       —           0      —
+           802.11ax, HE20, MCS0                      —           5      —
+           802.11ax, HE20, MCS9                      —           0      —
+
+
+
+                                 表 6-6. 接收邻道抑制
+
+                                              最小值         典型值        最大值
+           速率                                     (dB)    (dB)       (dB)
+           802.11b, 1 Mbps, DSSS                     —       38         —
+           802.11b, 11 Mbps, CCK                     —       38         —
+           802.11g, 6 Mbps, OFDM                     —       31         —
+           802.11g, 54 Mbps, OFDM                    —       20         —
+           802.11n, HT20, MCS0                       —       31         —
+           802.11n, HT20, MCS7                       —       16         —
+                                                                     见下页
+
+
+
+乐鑫信息科技                                  70                ESP32-C6 系列芯片技术规格书 v1.5
+                                     反馈文档意见
+6   射频特性
+
+
+                                        表 6-6 – 接上页
+                                                           最小值         典型值        最大值
+             速率                                             (dB)       (dB)         (dB)
+             802.11n, HT40, MCS0                               —         28            —
+             802.11n, HT40, MCS7                               —         10            —
+             802.11ax, HE20, MCS0                              —         25            —
+             802.11ax, HE20, MCS9                              —              2        —
+
+
+
+6.2 低功耗蓝牙射频
+
+                                   表 6-7. 低功耗蓝牙射频规格
+
+             名称                                       描述
+             工作信道中心频率范围                               2402 ~ 2480 MHz
+             射频发射功率范围                                –15.0 ~ 20.0 dBm
+
+
+
+6.2.1 低功耗蓝牙射频发射器 (TX) 特性
+
+                       表 6-8. 低功耗蓝牙 - 发射器特性 - 1 Mbps
+
+      参数              描述                                    最小值         典型值          最大值       单位
+                      Max. |fn |n=0, 1, 2, 3, ...k                 —          1.3          —   kHz
+                      Max. |f0 − fn |n=2, 3, 4, ...k               —          1.5          —   kHz
+      载波频率偏移和漂移
+                      Max. |fn − fn−5 |n=6, 7, 8, ...k             —          0.9          —   kHz
+                      |f1 − f0 |                                   —          0.6          —   kHz
+                      ∆ F 1avg                                     —     249.9             —   kHz
+      调制特性            Min. ∆ F 2max (至少 99.9% 的
+                                                                   —     212.1             —   kHz
+                      ∆ F 2max )
+                      ∆ F 2avg /∆ F 1avg                           —      0.88             —    —
+                      ± 2 MHz 偏移                                   —          –29          —   dBm
+      带内发射            ± 3 MHz 偏移                                   —          –36          —   dBm
+                      > ± 3 MHz 偏移                                 —          –39          —   dBm
+
+
+
+                       表 6-9. 低功耗蓝牙 - 发射器特性 - 2 Mbps
+
+      参数              描述                                    最小值         典型值          最大值       单位
+                      Max. |fn |n=0, 1, 2, 3, ...k                 —          2.2          —   kHz
+                      Max. |f0 − fn |n=2, 3, 4, ...k               —          1.1          —   kHz
+      载波频率偏移和漂移
+                      Max. |fn − fn−5 |n=6, 7, 8, ...k             —          1.1          —   kHz
+                      |f1 − f0 |                                   —          0.5          —   kHz
+                      ∆ F 1avg                                     —     499.4             —   kHz
+      调制特性            Min. ∆ F 2max (至少 99.9% 的
+                                                                   —     443.5             —   kHz
+                      ∆ F 2max )
+                                                                                               见下页
+
+
+
+乐鑫信息科技                                           71                    ESP32-C6 系列芯片技术规格书 v1.5
+                                           反馈文档意见
+6   射频特性
+
+
+                                          表 6-9 – 接上页
+      参数                描述                                 最小值   典型值         最大值     单位
+                        ∆ F 2avg /∆ F 1avg                   —        0.95       —       —
+                        ± 4 MHz 偏移                           —        –40        —   dBm
+      带内发射              ± 5 MHz 偏移                           —        –41        —   dBm
+                        > ± 5 MHz 偏移                         —        –42        —   dBm
+
+
+                     表 6-10. 低功耗蓝牙 - 发射器特性 - 125 Kbps
+
+      参数                描述                                 最小值   典型值         最大值     单位
+                        Max. |fn |n=0, 1, 2, 3, ...k         —         0.7       —   kHz
+                        Max. |f0 − fn |n=1, 2, 3, ...k       —         0.3       —   kHz
+      载波频率偏移和漂移
+                        |f0 − f3 |                           —         0.1       —   kHz
+                        Max. |fn − fn−3 |n=7, 8, 9, ...k     —         0.4       —   kHz
+                        ∆ F 1avg                             —       250.0       —   kHz
+      调制特性
+                        Min. ∆ F 1max (至少 99.9% 的
+                                                             —       238.0       —   kHz
+                        ∆ F 1max )
+                        ± 2 MHz 偏移                           —        –29        —   dBm
+      带内发射              ± 3 MHz 偏移                           —        –36        —   dBm
+                        > ± 3 MHz 偏移                         —        –39        —   dBm
+
+
+
+                     表 6-11. 低功耗蓝牙 - 发射器特性 - 500 Kbps
+
+      参数                描述                                 最小值   典型值         最大值     单位
+                        Max. |fn |n=0, 1, 2, 3, ...k         —         0.5       —   kHz
+                        Max. |f0 − fn |n=1, 2, 3, ...k       —         0.3       —   kHz
+      载波频率偏移和漂移
+                        |f0 − f3 |                           —         0.1       —   kHz
+                        Max. |fn − fn−3 |n=7, 8, 9, ...k     —         0.4       —   kHz
+                        ∆ F 2avg                             —       230.7       —   kHz
+      调制特性
+                        Min. ∆ F 2max (至少 99.9% 的
+                                                             —       217.6       —   kHz
+                        ∆ F 2max )
+                        ± 2 MHz 偏移                           —        –28        —   dBm
+      带内发射              ± 3 MHz 偏移                           —        –36        —   dBm
+                        > ± 3 MHz 偏移                         —        –39        —   dBm
+
+
+
+6.2.2 低功耗蓝牙射频接收器 (RX) 特性
+
+                        表 6-12. 低功耗蓝牙 - 接收器特性 - 1 Mbps
+
+    参数                                描述                     最小值       典型值       最大值         单位
+    灵敏度 @30.8% PER                    —                          —      –98.5        —       dBm
+    最大接收信号 @30.8% PER                 —                          —           8       —       dBm
+                                                                                         见下页
+
+
+
+
+乐鑫信息科技                                             72            ESP32-C6 系列芯片技术规格书 v1.5
+                                             反馈文档意见
+6   射频特性
+
+
+                                   表 6-12 – 接上页
+    参数                         描述                     最小值   典型值     最大值   单位
+                共信道            F = F0 MHz              —       7     —    dB
+                               F = F0 + 1 MHz          —       4     —    dB
+                               F = F0 – 1 MHz          —       3     —    dB
+                               F = F0 + 2 MHz          —     –21     —    dB
+                               F = F0 – 2 MHz          —     –22     —    dB
+                相邻信道
+                               F = F0 + 3 MHz          —     –28     —    dB
+    接收选择性 C/I
+                               F = F0 – 3 MHz          —     –36     —    dB
+                               F ≥ F0 + 4 MHz          —     –27     —    dB
+                               F ≤ F0 – 4 MHz          —     –36     —    dB
+                镜像频率           —                       —     –26     —    dB
+                               F = Fimage + 1 MHz      —     –29     —    dB
+                邻道镜像频率干扰
+                               F = Fimage – 1 MHz      —     –28     —    dB
+                               30 MHz ~ 2000 MHz       —     –16     —    dBm
+    带外阻塞                       2003 MHz ~ 2399 MHz     —     –24     —    dBm
+                               2484 MHz ~ 2997 MHz     —     –16     —    dBm
+                               3000 MHz ~ 12.75 GHz    —      –1     —    dBm
+    互调                         —                       —     –27     —    dBm
+
+
+
+                        表 6-13. 低功耗蓝牙 - 接收器特性 - 2 Mbps
+
+    参数                         描述                     最小值   典型值     最大值   单位
+    灵敏度 @30.8% PER             —                       —    –95.5    —    dBm
+    最大接收信号 @30.8% PER          —                       —       8     —    dBm
+                共信道            F = F0 MHz              —       8     —    dB
+                               F = F0 + 2 MHz          —       3     —    dB
+                               F = F0 – 2 MHz          —       2     —    dB
+                               F = F0 + 4 MHz          —     –23     —    dB
+                               F = F0 – 4 MHz          —     –25     —    dB
+                相邻信道
+                               F = F0 + 6 MHz          —     –31     —    dB
+    接收选择性 C/I
+                               F = F0 – 6 MHz          —     –35     —    dB
+                               F ≥ F0 + 8 MHz          —     –36     —    dB
+                               F ≤ F0 – 8 MHz          —     –36     —    dB
+                镜像频率           —                       —     –23     —    dB
+                               F = Fimage + 2 MHz      —     –30     —    dB
+                邻道镜像频率干扰
+                               F = Fimage – 2 MHz      —       3     —    dB
+                               30 MHz ~ 2000 MHz       —     –18     —    dBm
+    带外阻塞                       2003 MHz ~ 2399 MHz     —     –28     —    dBm
+                               2484 MHz ~ 2997 MHz     —     –16     —    dBm
+                               3000 MHz ~ 12.75 GHz    —      –1     —    dBm
+    互调                         —                       —     –29     —    dBm
+
+
+
+
+乐鑫信息科技                                  73             ESP32-C6 系列芯片技术规格书 v1.5
+                                    反馈文档意见
+6   射频特性
+
+
+                       表 6-14. 低功耗蓝牙 - 接收器特性 - 125 Kbps
+
+    参数                         描述                      最小值     典型值      最大值   单位
+    灵敏度 @30.8% PER             —                           —   –106.0    —    dBm
+    最大接收信号 @30.8% PER          —                           —       8     —    dBm
+                共信道            F = F0 MHz                  —       2     —    dB
+                               F = F0 + 1 MHz              —      –1     —    dB
+                               F = F0 – 1 MHz              —      –3     —    dB
+                               F = F0 + 2 MHz              —     –31     —    dB
+                               F = F0 – 2 MHz              —     –27     —    dB
+                相邻信道
+                               F = F0 + 3 MHz              —     –33     —    dB
+    接收选择性 C/I
+                               F = F0 – 3 MHz              —     –42     —    dB
+                               F ≥ F0 + 4 MHz              —     –31     —    dB
+                               F ≤ F0 – 4 MHz              —     –48     —    dB
+                镜像频率           —                           —     –31     —    dB
+                               F = Fimage + 1 MHz          —     –36     —    dB
+                邻道镜像频率干扰
+                               F = Fimage – 1 MHz          —     –33     —    dB
+
+
+                       表 6-15. 低功耗蓝牙 - 接收器特性 - 500 Kbps
+
+    参数                         描述                      最小值     典型值      最大值   单位
+    灵敏度 @30.8% PER             —                           —   –102.0    —    dBm
+    最大接收信号 @30.8% PER          —                           —       8     —    dBm
+                共信道            F = F0 MHz                  —       4     —    dB
+                               F = F0 + 1 MHz              —       1     —    dB
+                               F = F0 – 1 MHz              —      –1     —    dB
+                               F = F0 + 2 MHz              —     –23     —    dB
+                               F = F0 – 2 MHz              —     –24     —    dB
+                相邻信道
+                               F = F0 + 3 MHz              —     –33     —    dB
+    接收选择性 C/I
+                               F = F0 – 3 MHz              —     –41     —    dB
+                               F ≥ F0 + 4 MHz              —     –31     —    dB
+                               F ≤ F0 – 4 MHz              —     –41     —    dB
+                镜像频率           —                           —     –30     —    dB
+                               F = Fimage + 1 MHz          —     –35     —    dB
+                邻道镜像频率干扰
+                               F = Fimage – 1 MHz          —     –27     —    dB
+
+
+
+6.3 802.15.4 射频
+
+                             表 6-16. 802.15.4 射频规格
+
+                名称                           描述
+                工作信道中心频率范围                   2405 ~ 2480 MHz
+                1 Zigbee 在 2.4 GHz 的频段上具有从信道 11 到信道 26 共 16 个信道，
+                 信道间隔为 5 MHz。
+
+
+
+乐鑫信息科技                                  74                 ESP32-C6 系列芯片技术规格书 v1.5
+                                    反馈文档意见
+6   射频特性
+
+
+
+6.3.1 802.15.4 射频发射器 (TX) 特性
+
+                     表 6-17. 802.15.4 发射器特性 - 250 Kbps
+
+            参数                           最小值     典型值     最大值          单位
+            射频发射功率                       –15.0      —     20.0        dBm
+            EVM                             —    13.0%     —           —
+
+
+
+6.3.2 802.15.4 射频接收器 (RX) 特性
+
+                     表 6-18. 802.15.4 接收器特性 - 250 Kbps
+
+    参数                         描述                 最小值     典型值          最大值      单位
+    灵敏度 @1% PER                —                     —    –104.0            —   dBm
+    最大接收信号 @1% PER             —                     —           8          —   dBm
+                               F = F0 + 5 MHz        —           27         —   dB
+                  相邻信道
+                               F = F0 – 5 MHz        —           32         —   dB
+    相对干扰电平
+                               F = F0 + 10 MHz       —           47         —   dB
+                  替换信道
+                               F = F0 – 10 MHz       —           50         —   dB
+
+
+
+
+乐鑫信息科技                              75               ESP32-C6 系列芯片技术规格书 v1.5
+                                反馈文档意见
+7   封装
+
+
+
+7 封装
+    • 有关卷带、载盘和产品标签的信息，请参阅 《ESP32-C6 芯片包装信息》。
+
+    • 俯视图中，芯片管脚从 Pin 1 位置开始按逆时针方向编号。关于管脚序号和名称的详细信息，请参考图 2-1
+     ESP32-C6 管脚布局（QFN40 封装，俯视图） 和图 2-2 ESP32-C6 管脚布局（QFN32 封装，俯视图）。
+
+    • 推荐 PCB 封装图 源文件 (asc) 供您下载，可使用 PADS 或 Altium Designer 等软件导入。
+
+
+
+
+                            图 7-1. QFN40 (5×5 mm) 封装
+
+
+
+
+                            图 7-2. QFN32 (5×5 mm) 封装
+
+
+
+乐鑫信息科技                                 76              ESP32-C6 系列芯片技术规格书 v1.5
+                                   反馈文档意见
+          乐鑫信息科技
+
+
+
+
+                                                                                                                                                                                                         ESP32-C6 管脚总览
+                                   ESP32-C6 管脚总览
+                                                                                                      表 7-1. QFN40 封装管脚总览
+
+                                     管脚   管脚            管脚     供电          管脚配置                        模拟功能               LP IO MUX 功能                               IO MUX 功能
+                                     序号   名称            类型     管脚        复位时  复位后            0            1          0          1              0            类型        1       类型      2         类型
+                                      1   ANT           模拟
+                                      2   VDDA3P3       电源
+                                      3   VDDA3P3       电源
+                                      4   CHIP_PU       模拟
+                                      5   VDDPST1       电源
+                                      6   XTAL_32K_P     IO    VDDPST1                       XTAL_32K_P   ADC1_CH0   LP_GPIO0   LP_UART_DTRN   GPIO0        I/O/T    GPIO0    I/O/T
+                                      7   XTAL_32K_N     IO    VDDPST1                       XTAL_32K_N   ADC1_CH1   LP_GPIO1   LP_UART_DSRN   GPIO1        I/O/T    GPIO1    I/O/T
+                                      8   GPIO2          IO    VDDPST1   IE        IE                     ADC1_CH2   LP_GPIO2   LP_UART_RTSN   GPIO2        I/O/T    GPIO2    I/O/T   FSPIQ     I1/O/T
+                                      9   GPIO3          IO    VDDPST1   IE        IE                     ADC1_CH3   LP_GPIO3   LP_UART_CTSN   GPIO3        I/O/T    GPIO3    I/O/T
+                                     10   MTMS           IO    VDDPST1   IE        IE                     ADC1_CH4   LP_GPIO4   LP_UART_RXD    MTMS         I1       GPIO4    I/O/T   FSPIHD    I1/O/T
+                                     11   MTDI           IO    VDDPST1   IE        IE                     ADC1_CH5   LP_GPIO5   LP_UART_TXD    MTDI         I1       GPIO5    I/O/T   FSPIWP    I1/O/T
+                                     12   MTCK           IO    VDDPST1             IE, WPU                ADC1_CH6   LP_GPIO6   LP_I2C_SDA     MTCK         I1       GPIO6    I/O/T   FSPICLK   I1/O/T
+                                     13   MTDO           IO    VDDPST1             IE                                LP_GPIO7   LP_I2C_SCL     MTDO         O/T      GPIO7    I/O/T   FSPID     I1/O/T
+                                     14   GPIO8          IO    VDDPST2   IE        IE                                                          GPIO8        I/O/T    GPIO8    I/O/T
+                                     15   GPIO9          IO    VDDPST2   IE, WPU   IE, WPU                                                     GPIO9        I/O/T    GPIO9    I/O/T
+反馈文档意见
+
+
+
+
+                                     16   GPIO10         IO    VDDPST2             IE                                                          GPIO10       I/O/T    GPIO10   I/O/T
+                                     17   GPIO11         IO    VDDPST2             IE                                                          GPIO11       I/O/T    GPIO11   I/O/T
+                                                                                             USB_D-
+         77
+
+
+
+
+                                     18   GPIO12         IO    VDDPST2             IE                                                          GPIO12       I/O/T    GPIO12   I/O/T
+                                     19   GPIO13         IO    VDDPST2             IE, WPU   USB_D+                                            GPIO13       I/O/T    GPIO13   I/O/T
+                                     20   SPICS0         IO    VDD_SPI   WPU       IE, WPU                                                     SPICS0       O/T      GPIO24   I/O/T
+                                     21   SPIQ           IO    VDD_SPI   WPU       IE, WPU                                                     SPIQ         I1/O/T   GPIO25   I/O/T
+                                     22   SPIWP          IO    VDD_SPI   WPU       IE, WPU                                                     SPIWP        I1/O/T   GPIO26   I/O/T
+                                     23   VDD_SPI      电源/IO   —                             VDD_SPI                                           GPIO27       I/O/T    GPIO27   I/O/T
+                                     24   SPIHD          IO    VDD_SPI   WPU       IE, WPU                                                     SPIHD        I1/O/T   GPIO28   I/O/T
+                                     25   SPICLK         IO    VDD_SPI   WPU       IE, WPU                                                     SPICLK       O/T      GPIO29   I/O/T
+                                     26   SPID           IO    VDD_SPI   WPU       IE, WPU                                                     SPID         I1/O/T   GPIO30   I/O/T
+         ESP32-C6 系列芯片技术规格书 v1.5
+
+
+
+
+                                     27   GPIO15         IO    VDDPST2   IE        IE                                                          GPIO15       I/O/T    GPIO15   I/O/T
+                                     28   VDDPST2       电源
+                                     29   U0TXD          IO    VDDPST2             WPU                                                         U0TXD        O        GPIO16   I/O/T   FSPICS0   I1/O/T
+                                     30   U0RXD          IO    VDDPST2             IE, WPU                                                     U0RXD        I1       GPIO17   I/O/T   FSPICS1   O/T
+                                     31   SDIO_CMD       IO    VDDPST2   WPU       IE                                                          SDIO_CMD     I1/O/T   GPIO18   I/O/T   FSPICS2   O/T
+                                     32   SDIO_CLK       IO    VDDPST2   WPU       IE                                                          SDIO_CLK     I1       GPIO19   I/O/T   FSPICS3   O/T
+                                     33   SDIO_DATA0     IO    VDDPST2   WPU       IE                                                          SDIO_DATA0   I1/O/T   GPIO20   I/O/T   FSPICS4   O/T
+                                     34   SDIO_DATA1     IO    VDDPST2   WPU       IE                                                          SDIO_DATA1   I1/O/T   GPIO21   I/O/T   FSPICS5   O/T
+                                     35   SDIO_DATA2     IO    VDDPST2   WPU       IE                                                          SDIO_DATA2   I1/O/T   GPIO22   I/O/T
+                                     36   SDIO_DATA3     IO    VDDPST2   WPU       IE                                                          SDIO_DATA3   I1/O/T   GPIO23   I/O/T
+                                     37   VDDA1         电源
+                                     38   XTAL_N        模拟
+                                     39   XTAL_P        模拟
+                                     40   VDDA2         电源
+                                     41   GND           电源
+                                     * 更多信息，详见章节 2 管脚。 高亮 的单元格，请参考章节 2.3.4 GPIO 和 LP GPIO 的限制。
+                                                                                                  表 7-2. QFN32 封装管脚总览
+          乐鑫信息科技
+
+
+
+
+                                                                                                                                                                                                     ESP32-C6 管脚总览
+                                   管脚   管脚           管脚    供电          管脚配置                       模拟功能                LP IO MUX 功能                               IO MUX 功能
+                                   序号   名称           类型    管脚        复位时  复位后            0           1           0          1              0            类型        1       类型      2         类型
+                                    1   ANT          模拟
+                                    2   VDDA3P3      电源
+                                    3   VDDA3P3      电源
+                                    4   CHIP_PU      模拟
+                                    5   VDDPST1      电源
+                                    6   XTAL_32K_P    IO   VDDPST1                       XTAL_32K_P   ADC1_CH0   LP_GPIO0   LP_UART_DTRN   GPIO0        I/O/T    GPIO0    I/O/T
+                                    7   XTAL_32K_N    IO   VDDPST1                       XTAL_32K_N   ADC1_CH1   LP_GPIO1   LP_UART_DSRN   GPIO1        I/O/T    GPIO1    I/O/T
+                                    8   GPIO2         IO   VDDPST1   IE        IE                     ADC1_CH2   LP_GPIO2   LP_UART_RTSN   GPIO2        I/O/T    GPIO2    I/O/T   FSPIQ     I1/O/T
+                                    9   GPIO3         IO   VDDPST1   IE        IE                     ADC1_CH3   LP_GPIO3   LP_UART_CTSN   GPIO3        I/O/T    GPIO3    I/O/T
+                                   10   MTMS          IO   VDDPST1   IE        IE                     ADC1_CH4   LP_GPIO4   LP_UART_RXD    MTMS         I1       GPIO4    I/O/T   FSPIHD    I1/O/T
+                                   11   MTDI          IO   VDDPST1   IE        IE                     ADC1_CH5   LP_GPIO5   LP_UART_TXD    MTDI         I1       GPIO5    I/O/T   FSPIWP    I1/O/T
+                                   12   MTCK          IO   VDDPST1             IE, WPU                ADC1_CH6   LP_GPIO6   LP_I2C_SDA     MTCK         I1       GPIO6    I/O/T   FSPICLK   I1/O/T
+                                   13   MTDO          IO   VDDPST1             IE                                LP_GPIO7   LP_I2C_SCL     MTDO         O/T      GPIO7    I/O/T   FSPID     I1/O/T
+                                   14   GPIO8         IO   VDDPST2   IE        IE                                                          GPIO8        I/O/T    GPIO8    I/O/T
+                                   15   GPIO9         IO   VDDPST2   IE, WPU   IE, WPU                                                     GPIO9        I/O/T    GPIO9    I/O/T
+                                   16   GPIO12        IO   VDDPST2             IE        USB_D-                                            GPIO12       I/O/T    GPIO12   I/O/T
+                                   17   GPIO13        IO   VDDPST2             IE, WPU   USB_D+                                            GPIO13       I/O/T    GPIO13   I/O/T
+                                   18   GPIO14        IO   VDDPST2             IE                                                          GPIO14       I/O/T    GPIO14   I/O/T
+反馈文档意见
+
+
+
+
+                                   19   GPIO15        IO   VDDPST2   IE        IE                                                          GPIO15       I/O/T    GPIO15   I/O/T
+                                   20   VDDPST2      电源
+         78
+
+
+
+
+                                   21   U0TXD         IO   VDDPST2             WPU                                                         U0TXD        O        GPIO16   I/O/T   FSPICS0   I1/O/T
+                                   22   U0RXD         IO   VDDPST2             IE, WPU                                                     U0RXD        I1       GPIO17   I/O/T   FSPICS1   O/T
+                                   23   SDIO_CMD      IO   VDDPST2   WPU       IE                                                          SDIO_CMD     I1/O/T   GPIO18   I/O/T   FSPICS2   O/T
+                                   24   SDIO_CLK      IO   VDDPST2   WPU       IE                                                          SDIO_CLK     I1       GPIO19   I/O/T   FSPICS3   O/T
+                                   25   SDIO_DATA0    IO   VDDPST2   WPU       IE                                                          SDIO_DATA0   I1/O/T   GPIO20   I/O/T   FSPICS4   O/T
+                                   26   SDIO_DATA1    IO   VDDPST2   WPU       IE                                                          SDIO_DATA1   I1/O/T   GPIO21   I/O/T   FSPICS5   O/T
+                                   27   SDIO_DATA2    IO   VDDPST2   WPU       IE                                                          SDIO_DATA2   I1/O/T   GPIO22   I/O/T
+                                   28   SDIO_DATA3    IO   VDDPST2   WPU       IE                                                          SDIO_DATA3   I1/O/T   GPIO23   I/O/T
+                                   29   VDDA1        电源
+         ESP32-C6 系列芯片技术规格书 v1.5
+
+
+
+
+                                   30   XTAL_N       模拟
+                                   31   XTAL_P       模拟
+                                   32   VDDA2        电源
+                                   33   GND          电源
+                                   * 更多信息，详见章节 2 管脚。 高亮 的单元格，请参考章节 2.3.4 GPIO 和 LP GPIO 的限制。
+技术规格书版本号管理
+
+
+
+技术规格书版本号管理
+
+技术规格书版本         状态   水印                    定义
+v0.1 ~ v0.5（不                              该技术规格书正在完善。对应产品处于设计阶段，
+                草稿   Confidential
+包括 v0.5）                                   产品规格如有变更，恕不另行通知。
+                                           该技术规格书正在积极更新。对应产品处于验证
+v0.5 ~ v1.0（不   初步
+                     Preliminary           阶段，产品规格可能会在量产前变更，并记录在
+包括 v1.0）        发布
+                                           技术规格书的修订历史中。
+                                           该技术规格书已公开发布。对应产品已量产，产
+                正式
+v1.0 及更高版本           —                     品规格已最终确定，重大变更将通过
+                发布
+                                           产品变更通知 (PCN) 进行通知。
+                                           该技术规格书更新频率较低，对应产品不推荐用
+任意版本            —    不推荐用于新设计 (NRND)1
+                                           于新设计。
+任意版本            —    停产 (EOL)2             该技术规格书不再维护，对应产品已停产。
+1 技术规格书涵盖的所有产品型号均不推荐用于新设计时，封面才会添加水印。
+2 技术规格书涵盖的所有产品型号均停产时，封面才会添加水印。
+
+
+
+
+乐鑫信息科技                                79           ESP32-C6 系列芯片技术规格书 v1.5
+                                    反馈文档意见
+词汇表
+
+
+
+词汇表
+
+模块
+
+     芯片内部用于扩展功能的一个单元，例如加密模块、射频模块 2
+
+外设
+
+     芯片内部用于与外界通讯的硬件组件或子系统 2
+
+封装外 flash
+
+     位于芯片封装外部的 flash 4, 31, 39
+
+封装内 flash
+
+     集成于芯片封装内部、位于芯片晶圆外部的 flash 31
+
+strapping 管脚
+
+     芯片上电时用于某些配置的一种 GPIO 管脚，可在芯片复位后重新配置为普通 GPIO 32
+
+eFuse 参数
+
+     存储在芯片内 eFuse 存储器中的参数。可以通过写 EFUSE_PGM_DATAn_REG 寄存器设置，通过读取与参
+     数同名的寄存器字段获得具体值 32
+
+SPI boot 模式
+
+     从 SPI flash 中加载和执行现有代码的启动模式 33
+
+joint download boot 模式
+
+     通过 UART 或其他接口（见表 3-3 芯片启动模式控制 > 注释）下载代码到 flash 中、并从 flash 或 SRAM
+     中加载和执行下载代码的启动模式 33
+
+eFuse
+
+     一次性可编程 (OTP) 存储器，用于存储系统和用户参数，例如 MAC 地址、芯片版本号、flash 加密密钥等。
+     值为 0 表示默认状态，值为 1 表示已烧写 38
+
+
+
+
+乐鑫信息科技                             80         ESP32-C6 系列芯片技术规格书 v1.5
+                                 反馈文档意见
+相关文档和资源
+
+
+
+相关文档和资源
+相关文档
+ • 《ESP32-C6 技术参考手册》 – 提供 ESP32-C6 芯片的存储器和外设的详细使用说明。
+ • 《ESP32-C6 硬件设计指南》 – 提供基于 ESP32-C6 芯片的产品设计规范。
+ • 《ESP32-C6 系列芯片勘误表》 – 描述 ESP32-C6 系列芯片的已知错误。
+ • 证书
+  https://espressif.com/zh-hans/support/documents/certificates
+ • ESP32-C6 产品/工艺变更通知 (PCN)
+  https://espressif.com/zh-hans/support/documents/pcns?keys=ESP32-C6
+ • 文档更新和订阅通知
+  https://espressif.com/zh-hans/support/download/documents
+
+开发者社区
+ • 《ESP32-C6 ESP-IDF 编程指南》 – ESP-IDF 开发框架的文档中心。
+ • ESP-IDF 及 GitHub 上的其它开发框架
+  https://github.com/espressif
+ • ESP32 论坛 – 工程师对工程师 (E2E) 的社区，您可以在这里提出问题、解决问题、分享知识、探索观点。
+  https://esp32.com/
+ • ESP-FAQ – 由乐鑫官方推出的针对常见问题的总结。
+  https://espressif.com/projects/esp-faq/zh_CN/latest/index.html
+ • The ESP Journal – 分享乐鑫工程师的最佳实践、技术文章和工作随笔。
+  https://blog.espressif.com/
+ • SDK 和演示、App、工具、AT 等下载资源
+  https://espressif.com/zh-hans/support/download/sdks-demos
+
+产品
+ • ESP32-C6 系列芯片 – ESP32-C6 全系列芯片。
+  https://espressif.com/zh-hans/products/socs?id=ESP32-C6
+ • ESP32-C6 系列模组 – ESP32-C6 全系列模组。
+  https://espressif.com/zh-hans/products/modules?id=ESP32-C6
+ • ESP32-C6 系列开发板 – ESP32-C6 全系列开发板。
+  https://espressif.com/zh-hans/products/devkits?id=ESP32-C6
+ • ESP Product Selector（乐鑫产品选型工具）– 通过筛选性能参数、进行产品对比快速定位您所需要的产品。
+  https://products.espressif.com/#/product-selector?language=zh
+
+联系我们
+ • 商务问题、技术支持、电路原理图 & PCB 设计审阅、购买样品（线上商店）、成为供应商、意见与建议
+  https://espressif.com/zh-hans/contact-us/sales-questions
+
+
+
+
+乐鑫信息科技                                            81               ESP32-C6 系列芯片技术规格书 v1.5
+                                             反馈文档意见
+修订历史
+
+
+
+修订历史
+
+日期           版本     发布说明
+
+                      • 在章节 产品概述、章节 4.1.4.6 RSA 数字签名外设 及相关 HMAC、SHA
+                       表述中，将数字签名更名为并明确为 RSA 数字签名外设 (RSA_DS)
+2026-03-31   v1.5     • 简化 ESP32-C6 功能框图，仅显示默认配置
+                      • 更新章节 4.1.3.7 电源管理单元 中预设功耗模式的说明
+
+
+                      • 将表 1-1 ESP32-C6 系列芯片对比 中的“订购代码”改为“料号”
+                      • 新增章节 1.3 芯片版本
+                      • 在表格 2-10 QFN40 封装外设管脚分配 和表格 2-11 QFN32 封装外设管
+                       脚分配 增加交换 USB 管脚的说明
+2025-11-20   v1.4     • 新增章节 5.7 存储器规格
+                      • 删除章节 7 封装 QFN40 封装图中的 TSLP 相关信息
+                      • 新增附录 技术规格书版本号管理
+                      • 其他微小改动
+
+
+                      • 更新章节 产品概述 中的 CPU CoreMark® 得分
+                      • 新增章节 2.3.5 外设管脚分配
+2025-03-21   v1.3     • 根据 AR2024-011，在章节 4.1.3.3 时钟 删除“32 kHz 内部慢速 RC 振荡
+                       器”
+
+
+2024-08-23   v1.2   新增 ESP32-C6FH8 型号
+
+                      • 更新章节 产品概述 中的 CPU CoreMark® 得分
+                      • 在章节 4.1.2.1 内部存储器 新增 flash 编程/擦除周期、数据保留时间、最
+                       大时钟频率
+                      • 在表 5-1 绝对最大额定值 中新增 IO 输出总电流
+                      • 更新表 5-3 VDD_SPI 内部和输出特性 中 RSP I 的数值
+                      • 在章节 7 封装 新增推荐 PCB 封装图链接和说明
+2024-05-10   v1.1     • 新增章节 词汇表
+                      • 优化以下章节的格式、结构和表述：
+                         – 章节 2 管脚
+                         – 章节 3 启动配置项（曾用名“Strapping 管脚”）
+                         – 章节 4 功能描述
+                      • 其他微小改动
+
+
+                                                                    见下页
+
+
+
+
+乐鑫信息科技                               82          ESP32-C6 系列芯片技术规格书 v1.5
+                                 反馈文档意见
+修订历史
+
+
+                                 接上页
+日期           版本     发布说明
+
+                     • 表 2-4 QFN40 封装 IO MUX 管脚功能 和表 2-5 QFN32 封装 IO MUX 管脚
+                      功能 说明 4 新增 USB_PU 的描述
+                     • 更新章节 3.3 ROM 日志打印控制
+                     • 新增章节 5.5 ADC 特性
+                     • 表 5-8 Active 模式下低功耗蓝牙功耗特性 和表 5-9 Active 模式下 802.15.4
+                      功耗特性 测试条件由–24.0 dBm 更新为–15.0 dBm，并修改相应测试峰
+2023-07-25   v1.0     值
+                     • 新增章节 5.8 可靠性
+                     • 表 6-7 低功耗蓝牙射频规格 和表 6-17 802.15.4 发射器特性 - 250 Kbps
+                      中的射频发射功率最小值更新为–15.0 dBm
+                     • 更新 相关文档和资源7
+                     • 其他微小改动
+
+
+
+2023-01-16   v0.5   预发布
+
+
+
+
+乐鑫信息科技                             83             ESP32-C6 系列芯片技术规格书 v1.5
+                                反馈文档意见
+免责声明和版权公告
+本文档中的信息，包括供参考的 URL 地址，如有变更，恕不另行通知。
+本文档可能引用了第三方的信息，所有引用的信息均为“按现状”提供，乐鑫不对信息的准确性、真实性做任何保证。
+乐鑫不对本文档的内容做任何保证，包括内容的适销性、是否适用于特定用途，也不提供任何其他乐鑫提案、规格书或样
+品在他处提到的任何保证。
+乐鑫不对本文档是否侵犯第三方权利做任何保证，也不对使用本文档内信息导致的任何侵犯知识产权的行为负责。本文档
+在此未以禁止反言或其他方式授予任何知识产权许可，不管是明示许可还是暗示许可。
+Wi-Fi 联盟成员标志归 Wi-Fi 联盟所有。蓝牙标志是 Bluetooth SIG 的注册商标。
+文档中提到的所有商标名称、商标和注册商标均属其各自所有者的财产，特此声明。
+版权归 © 2026 乐鑫信息科技（上海）股份有限公司。保留所有权利。
+www.espressif.com
+

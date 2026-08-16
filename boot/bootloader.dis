@@ -1,0 +1,901 @@
+
+bootloader.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text.boot:
+
+42000000 <_start-0x8>:
+42000000:	aedb041d          	.word	0xaedb041d
+42000004:	aedb041d          	.word	0xaedb041d
+
+42000008 <_start>:
+42000008:	40880137          	lui	sp,0x40880
+4200000c:	f1402573          	csrrs	a0,mhartid,zero
+42000010:	50051363          	bne	a0,zero,42000516 <_halt>
+42000014:	fe801197          	auipc	gp,0xfe801
+42000018:	80c18193          	addi	gp,gp,-2036 # 40800820 <__global_pointer$>
+4200001c:	00001297          	auipc	t0,0x1
+42000020:	a3428293          	addi	t0,t0,-1484 # 42000a50 <_trap_handler>
+42000024:	30529073          	csrrw	zero,mtvec,t0
+42000028:	30401073          	csrrw	zero,mie,zero
+4200002c:	6289                	c.lui	t0,0x2
+4200002e:	80028293          	addi	t0,t0,-2048 # 1800 <KERNEL_FLASH_OFFSET+0x800>
+42000032:	30029073          	csrrw	zero,mstatus,t0
+42000036:	4e6000ef          	jal	ra,4200051c <_disable_all_wdt>
+4200003a:	fe800297          	auipc	t0,0xfe800
+4200003e:	fc628293          	addi	t0,t0,-58 # 40800000 <__bss_start>
+42000042:	fe800317          	auipc	t1,0xfe800
+42000046:	fde30313          	addi	t1,t1,-34 # 40800020 <__bss_end>
+4200004a:	0062f663          	bgeu	t0,t1,42000056 <_start+0x4e>
+4200004e:	0002a023          	sw	zero,0(t0)
+42000052:	0291                	c.addi	t0,4
+42000054:	bfdd                	c.j	4200004a <_start+0x42>
+42000056:	600962b7          	lui	t0,0x60096
+4200005a:	4305                	c.li	t1,1
+4200005c:	0062a023          	sw	t1,0(t0) # 60096000 <PCR_BASE>
+42000060:	00700337          	lui	t1,0x700
+42000064:	0062a223          	sw	t1,4(t0)
+42000068:	600002b7          	lui	t0,0x60000
+4200006c:	119000ef          	jal	ra,42000984 <_uart_wait_sync>
+42000070:	00600337          	lui	t1,0x600
+42000074:	0262a023          	sw	t1,32(t0) # 60000020 <UART0_BASE+0x20>
+42000078:	06400393          	addi	t2,zero,100
+4200007c:	13fd                	c.addi	t2,-1
+4200007e:	fe039fe3          	bne	t2,zero,4200007c <_start+0x74>
+42000082:	4371                	c.li	t1,28
+42000084:	0262a023          	sw	t1,32(t0)
+42000088:	00400337          	lui	t1,0x400
+4200008c:	15b30313          	addi	t1,t1,347 # 40015b <UART_CLKDIV_115200>
+42000090:	0062aa23          	sw	t1,20(t0)
+42000094:	03000337          	lui	t1,0x3000
+42000098:	0862a423          	sw	t1,136(t0)
+4200009c:	4305                	c.li	t1,1
+4200009e:	0862ac23          	sw	t1,152(t0)
+420000a2:	0e3000ef          	jal	ra,42000984 <_uart_wait_sync>
+420000a6:	600902b7          	lui	t0,0x60090
+420000aa:	4301                	c.li	t1,0
+420000ac:	0462a223          	sw	t1,68(t0) # 60090044 <IO_MUX_BASE+0x44>
+420000b0:	30000313          	addi	t1,zero,768
+420000b4:	0462a423          	sw	t1,72(t0)
+420000b8:	600912b7          	lui	t0,0x60091
+420000bc:	6341                	c.lui	t1,0x10
+420000be:	0262a223          	sw	t1,36(t0) # 60091024 <GPIO_BASE+0x24>
+420000c2:	00001517          	auipc	a0,0x1
+420000c6:	9e650513          	addi	a0,a0,-1562 # 42000aa8 <str_banner>
+420000ca:	107000ef          	jal	ra,420009d0 <uart_puts>
+420000ce:	00001517          	auipc	a0,0x1
+420000d2:	9ff50513          	addi	a0,a0,-1537 # 42000acd <str_env_prefix>
+420000d6:	0fb000ef          	jal	ra,420009d0 <uart_puts>
+420000da:	f1402573          	csrrs	a0,mhartid,zero
+420000de:	111000ef          	jal	ra,420009ee <uart_print_hex8>
+420000e2:	00001517          	auipc	a0,0x1
+420000e6:	9ff50513          	addi	a0,a0,-1537 # 42000ae1 <str_sp_is>
+420000ea:	0e7000ef          	jal	ra,420009d0 <uart_puts>
+420000ee:	850a                	c.mv	a0,sp
+420000f0:	121000ef          	jal	ra,42000a10 <uart_print_hex32>
+420000f4:	00001517          	auipc	a0,0x1
+420000f8:	cf150513          	addi	a0,a0,-783 # 42000de5 <str_crlf>
+420000fc:	0d5000ef          	jal	ra,420009d0 <uart_puts>
+42000100:	00001517          	auipc	a0,0x1
+42000104:	9e850513          	addi	a0,a0,-1560 # 42000ae8 <str_uart_ok>
+42000108:	0c9000ef          	jal	ra,420009d0 <uart_puts>
+4200010c:	00001517          	auipc	a0,0x1
+42000110:	9fc50513          	addi	a0,a0,-1540 # 42000b08 <str_wdt_ok>
+42000114:	0bd000ef          	jal	ra,420009d0 <uart_puts>
+42000118:	00001517          	auipc	a0,0x1
+4200011c:	a1550513          	addi	a0,a0,-1515 # 42000b2d <str_tmr_skip>
+42000120:	0b1000ef          	jal	ra,420009d0 <uart_puts>
+42000124:	420802b7          	lui	t0,0x42080
+42000128:	0002a303          	lw	t1,0(t0) # 42080000 <PASSWORD_FLASH_ADDR>
+4200012c:	c6a553b7          	lui	t2,0xc6a55
+42000130:	50138393          	addi	t2,t2,1281 # c6a55501 <PW_MAGIC_VALUE>
+42000134:	08731c63          	bne	t1,t2,420001cc <_no_password>
+42000138:	00001517          	auipc	a0,0x1
+4200013c:	ccf50513          	addi	a0,a0,-817 # 42000e07 <str_pw_prompt>
+42000140:	091000ef          	jal	ra,420009d0 <uart_puts>
+42000144:	4d0d                	c.li	s10,3
+
+42000146 <_pw_retry>:
+42000146:	715d                	c.addi16sp	sp,-80
+42000148:	850a                	c.mv	a0,sp
+4200014a:	03700593          	addi	a1,zero,55
+4200014e:	552000ef          	jal	ra,420006a0 <uart_read_line>
+42000152:	85aa                	c.mv	a1,a0
+42000154:	850a                	c.mv	a0,sp
+42000156:	5c0000ef          	jal	ra,42000716 <sha256_hash>
+4200015a:	828a                	c.mv	t0,sp
+4200015c:	4351                	c.li	t1,20
+4200015e:	0002a023          	sw	zero,0(t0)
+42000162:	0291                	c.addi	t0,4
+42000164:	137d                	c.addi	t1,-1 # ffff <UART_SYNC_TIMEOUT+0xd8ef>
+42000166:	fe031ce3          	bne	t1,zero,4200015e <_pw_retry+0x18>
+4200016a:	6161                	c.addi16sp	sp,80
+4200016c:	420802b7          	lui	t0,0x42080
+42000170:	0291                	c.addi	t0,4 # 42080004 <PASSWORD_FLASH_ADDR+0x4>
+42000172:	fe800317          	auipc	t1,0xfe800
+42000176:	e8e30313          	addi	t1,t1,-370 # 40800000 <__bss_start>
+4200017a:	43a1                	c.li	t2,8
+4200017c:	4f01                	c.li	t5,0
+4200017e:	0002ae03          	lw	t3,0(t0)
+42000182:	00032e83          	lw	t4,0(t1)
+42000186:	01de4e33          	xor	t3,t3,t4
+4200018a:	01cf6f33          	or	t5,t5,t3
+4200018e:	0291                	c.addi	t0,4
+42000190:	0311                	c.addi	t1,4
+42000192:	13fd                	c.addi	t2,-1
+42000194:	fe0395e3          	bne	t2,zero,4200017e <_pw_retry+0x38>
+42000198:	000f1963          	bne	t5,zero,420001aa <_pw_fail>
+4200019c:	00001517          	auipc	a0,0x1
+420001a0:	c8c50513          	addi	a0,a0,-884 # 42000e28 <str_pw_ok>
+420001a4:	02d000ef          	jal	ra,420009d0 <uart_puts>
+420001a8:	a805                	c.j	420001d8 <_pw_done>
+
+420001aa <_pw_fail>:
+420001aa:	1d7d                	c.addi	s10,-1
+420001ac:	000d0963          	beq	s10,zero,420001be <_pw_locked>
+420001b0:	00001517          	auipc	a0,0x1
+420001b4:	c9950513          	addi	a0,a0,-871 # 42000e49 <str_pw_wrong>
+420001b8:	019000ef          	jal	ra,420009d0 <uart_puts>
+420001bc:	b769                	c.j	42000146 <_pw_retry>
+
+420001be <_pw_locked>:
+420001be:	00001517          	auipc	a0,0x1
+420001c2:	cb050513          	addi	a0,a0,-848 # 42000e6e <str_pw_locked>
+420001c6:	00b000ef          	jal	ra,420009d0 <uart_puts>
+420001ca:	a6b1                	c.j	42000516 <_halt>
+
+420001cc <_no_password>:
+420001cc:	00001517          	auipc	a0,0x1
+420001d0:	ccb50513          	addi	a0,a0,-821 # 42000e97 <str_pw_none>
+420001d4:	7fc000ef          	jal	ra,420009d0 <uart_puts>
+
+420001d8 <_pw_done>:
+420001d8:	4a81                	c.li	s5,0
+420001da:	4b01                	c.li	s6,0
+420001dc:	4b81                	c.li	s7,0
+420001de:	408802b7          	lui	t0,0x40880
+420001e2:	80028293          	addi	t0,t0,-2048 # 4087f800 <MAILBOX_ADDR>
+420001e6:	0002a303          	lw	t1,0(t0)
+420001ea:	c6aac3b7          	lui	t2,0xc6aac
+420001ee:	b0138393          	addi	t2,t2,-1279 # c6aabb01 <MB_MAGIC_VALUE>
+420001f2:	0c731563          	bne	t1,t2,420002bc <_no_mailbox>
+420001f6:	00c2ab83          	lw	s7,12(t0)
+420001fa:	0082ac03          	lw	s8,8(t0)
+420001fe:	0042ac83          	lw	s9,4(t0)
+42000202:	00001517          	auipc	a0,0x1
+42000206:	b1f50513          	addi	a0,a0,-1249 # 42000d21 <str_mailbox>
+4200020a:	7c6000ef          	jal	ra,420009d0 <uart_puts>
+4200020e:	00001517          	auipc	a0,0x1
+42000212:	b2f50513          	addi	a0,a0,-1233 # 42000d3d <str_mb_status>
+42000216:	7ba000ef          	jal	ra,420009d0 <uart_puts>
+4200021a:	8566                	c.mv	a0,s9
+4200021c:	7d2000ef          	jal	ra,420009ee <uart_print_hex8>
+42000220:	00001517          	auipc	a0,0x1
+42000224:	b2850513          	addi	a0,a0,-1240 # 42000d48 <str_mb_mode>
+42000228:	7a8000ef          	jal	ra,420009d0 <uart_puts>
+4200022c:	8562                	c.mv	a0,s8
+4200022e:	7c0000ef          	jal	ra,420009ee <uart_print_hex8>
+42000232:	00001517          	auipc	a0,0x1
+42000236:	b2350513          	addi	a0,a0,-1245 # 42000d55 <str_mb_retry>
+4200023a:	796000ef          	jal	ra,420009d0 <uart_puts>
+4200023e:	855e                	c.mv	a0,s7
+42000240:	7ae000ef          	jal	ra,420009ee <uart_print_hex8>
+42000244:	00001517          	auipc	a0,0x1
+42000248:	ba150513          	addi	a0,a0,-1119 # 42000de5 <str_crlf>
+4200024c:	784000ef          	jal	ra,420009d0 <uart_puts>
+42000250:	428d                	c.li	t0,3
+42000252:	205bfc63          	bgeu	s7,t0,4200046a <_emergency_mode>
+42000256:	42c1                	c.li	t0,16
+42000258:	005c0a63          	beq	s8,t0,4200026c <_mb_set_password>
+4200025c:	42c5                	c.li	t0,17
+4200025e:	025c0e63          	beq	s8,t0,4200029a <_mb_del_password>
+42000262:	428d                	c.li	t0,3
+42000264:	0782e263          	bltu	t0,s8,420002c8 <_mode_done>
+42000268:	8ae2                	c.mv	s5,s8
+4200026a:	a8b9                	c.j	420002c8 <_mode_done>
+
+4200026c <_mb_set_password>:
+4200026c:	00001517          	auipc	a0,0x1
+42000270:	c4a50513          	addi	a0,a0,-950 # 42000eb6 <str_pw_setting>
+42000274:	75c000ef          	jal	ra,420009d0 <uart_puts>
+42000278:	40880537          	lui	a0,0x40880
+4200027c:	80050513          	addi	a0,a0,-2048 # 4087f800 <MAILBOX_ADDR>
+42000280:	02050513          	addi	a0,a0,32
+42000284:	000805b7          	lui	a1,0x80
+42000288:	672000ef          	jal	ra,420008fa <flash_write_pw_slot>
+4200028c:	00001517          	auipc	a0,0x1
+42000290:	c4d50513          	addi	a0,a0,-947 # 42000ed9 <str_pw_set_ok>
+42000294:	73c000ef          	jal	ra,420009d0 <uart_puts>
+42000298:	a805                	c.j	420002c8 <_mode_done>
+
+4200029a <_mb_del_password>:
+4200029a:	00001517          	auipc	a0,0x1
+4200029e:	c5e50513          	addi	a0,a0,-930 # 42000ef8 <str_pw_deleting>
+420002a2:	72e000ef          	jal	ra,420009d0 <uart_puts>
+420002a6:	00080537          	lui	a0,0x80
+420002aa:	604000ef          	jal	ra,420008ae <flash_erase_sector>
+420002ae:	00001517          	auipc	a0,0x1
+420002b2:	c6e50513          	addi	a0,a0,-914 # 42000f1c <str_pw_del_ok>
+420002b6:	71a000ef          	jal	ra,420009d0 <uart_puts>
+420002ba:	a039                	c.j	420002c8 <_mode_done>
+
+420002bc <_no_mailbox>:
+420002bc:	00001517          	auipc	a0,0x1
+420002c0:	aa350513          	addi	a0,a0,-1373 # 42000d5f <str_no_mailbox>
+420002c4:	70c000ef          	jal	ra,420009d0 <uart_puts>
+
+420002c8 <_mode_done>:
+420002c8:	408802b7          	lui	t0,0x40880
+420002cc:	80028293          	addi	t0,t0,-2048 # 4087f800 <MAILBOX_ADDR>
+420002d0:	4341                	c.li	t1,16
+420002d2:	0002a023          	sw	zero,0(t0)
+420002d6:	0291                	c.addi	t0,4
+420002d8:	137d                	c.addi	t1,-1
+420002da:	fe031ce3          	bne	t1,zero,420002d2 <_mode_done+0xa>
+420002de:	00001517          	auipc	a0,0x1
+420002e2:	aa850513          	addi	a0,a0,-1368 # 42000d86 <str_boot_mode>
+420002e6:	6ea000ef          	jal	ra,420009d0 <uart_puts>
+420002ea:	8556                	c.mv	a0,s5
+420002ec:	702000ef          	jal	ra,420009ee <uart_print_hex8>
+420002f0:	00001517          	auipc	a0,0x1
+420002f4:	af550513          	addi	a0,a0,-1291 # 42000de5 <str_crlf>
+420002f8:	6d8000ef          	jal	ra,420009d0 <uart_puts>
+420002fc:	00001517          	auipc	a0,0x1
+42000300:	86650513          	addi	a0,a0,-1946 # 42000b62 <str_probe>
+42000304:	6cc000ef          	jal	ra,420009d0 <uart_puts>
+42000308:	42001437          	lui	s0,0x42001
+4200030c:	00042283          	lw	t0,0(s0) # 42001000 <KERNEL_FLASH_ADDR>
+42000310:	c6b00337          	lui	t1,0xc6b00
+42000314:	10030313          	addi	t1,t1,256 # c6b00100 <KERNEL_MAGIC>
+42000318:	16629963          	bne	t0,t1,4200048a <_no_kernel>
+4200031c:	4044                	c.lw	s1,4(s0)
+4200031e:	00842903          	lw	s2,8(s0)
+42000322:	00c42983          	lw	s3,12(s0)
+42000326:	01042a03          	lw	s4,16(s0)
+4200032a:	000782b7          	lui	t0,0x78
+4200032e:	1732ec63          	bltu	t0,s3,420004a6 <_kernel_too_big>
+42000332:	18098163          	beq	s3,zero,420004b4 <_kernel_empty>
+42000336:	408002b7          	lui	t0,0x40800
+4200033a:	14596f63          	bltu	s2,t0,42000498 <_kernel_bad_addr>
+4200033e:	408802b7          	lui	t0,0x40880
+42000342:	14597b63          	bgeu	s2,t0,42000498 <_kernel_bad_addr>
+42000346:	00398313          	addi	t1,s3,3
+4200034a:	ffc37313          	andi	t1,t1,-4
+4200034e:	934a                	c.add	t1,s2
+42000350:	4087f2b7          	lui	t0,0x4087f
+42000354:	1462e263          	bltu	t0,t1,42000498 <_kernel_bad_addr>
+42000358:	15236063          	bltu	t1,s2,42000498 <_kernel_bad_addr>
+4200035c:	1324ee63          	bltu	s1,s2,42000498 <_kernel_bad_addr>
+42000360:	1264fc63          	bgeu	s1,t1,42000498 <_kernel_bad_addr>
+42000364:	00001517          	auipc	a0,0x1
+42000368:	82f50513          	addi	a0,a0,-2001 # 42000b93 <str_kern_entry>
+4200036c:	664000ef          	jal	ra,420009d0 <uart_puts>
+42000370:	8526                	c.mv	a0,s1
+42000372:	69e000ef          	jal	ra,42000a10 <uart_print_hex32>
+42000376:	00001517          	auipc	a0,0x1
+4200037a:	83350513          	addi	a0,a0,-1997 # 42000ba9 <str_kern_load>
+4200037e:	652000ef          	jal	ra,420009d0 <uart_puts>
+42000382:	854a                	c.mv	a0,s2
+42000384:	68c000ef          	jal	ra,42000a10 <uart_print_hex32>
+42000388:	00001517          	auipc	a0,0x1
+4200038c:	82a50513          	addi	a0,a0,-2006 # 42000bb2 <str_kern_size>
+42000390:	640000ef          	jal	ra,420009d0 <uart_puts>
+42000394:	854e                	c.mv	a0,s3
+42000396:	67a000ef          	jal	ra,42000a10 <uart_print_hex32>
+4200039a:	00001517          	auipc	a0,0x1
+4200039e:	a4b50513          	addi	a0,a0,-1461 # 42000de5 <str_crlf>
+420003a2:	62e000ef          	jal	ra,420009d0 <uart_puts>
+420003a6:	02040513          	addi	a0,s0,32
+420003aa:	85ce                	c.mv	a1,s3
+420003ac:	250000ef          	jal	ra,420005fc <crc32>
+420003b0:	11451963          	bne	a0,s4,420004c2 <_kernel_bad_crc>
+420003b4:	00001517          	auipc	a0,0x1
+420003b8:	80750513          	addi	a0,a0,-2041 # 42000bbb <str_crc_ok>
+420003bc:	614000ef          	jal	ra,420009d0 <uart_puts>
+420003c0:	00001517          	auipc	a0,0x1
+420003c4:	81350513          	addi	a0,a0,-2029 # 42000bd3 <str_copy>
+420003c8:	608000ef          	jal	ra,420009d0 <uart_puts>
+420003cc:	02040293          	addi	t0,s0,32
+420003d0:	834a                	c.mv	t1,s2
+420003d2:	00398393          	addi	t2,s3,3
+420003d6:	ffc3f393          	andi	t2,t2,-4
+420003da:	00705a63          	bge	zero,t2,420003ee <_mode_done+0x126>
+420003de:	0002ae03          	lw	t3,0(t0) # 4087f000 <BOOT_PARAMS_ADDR>
+420003e2:	01c32023          	sw	t3,0(t1)
+420003e6:	0291                	c.addi	t0,4
+420003e8:	0311                	c.addi	t1,4
+420003ea:	13f1                	c.addi	t2,-4
+420003ec:	b7fd                	c.j	420003da <_mode_done+0x112>
+420003ee:	854a                	c.mv	a0,s2
+420003f0:	85ce                	c.mv	a1,s3
+420003f2:	20a000ef          	jal	ra,420005fc <crc32>
+420003f6:	11451963          	bne	a0,s4,42000508 <_kernel_copy_fail>
+420003fa:	00000517          	auipc	a0,0x0
+420003fe:	7fa50513          	addi	a0,a0,2042 # 42000bf4 <str_copy_ok>
+42000402:	5ce000ef          	jal	ra,420009d0 <uart_puts>
+42000406:	4087f2b7          	lui	t0,0x4087f
+4200040a:	c6b00337          	lui	t1,0xc6b00
+4200040e:	10130313          	addi	t1,t1,257 # c6b00101 <BP_MAGIC_VALUE>
+42000412:	0062a023          	sw	t1,0(t0) # 4087f000 <BOOT_PARAMS_ADDR>
+42000416:	6341                	c.lui	t1,0x10
+42000418:	0062a223          	sw	t1,4(t0)
+4200041c:	0152a423          	sw	s5,8(t0)
+42000420:	0162a623          	sw	s6,12(t0)
+42000424:	0092a823          	sw	s1,16(t0)
+42000428:	0122aa23          	sw	s2,20(t0)
+4200042c:	0132ac23          	sw	s3,24(t0)
+42000430:	02626337          	lui	t1,0x2626
+42000434:	a0030313          	addi	t1,t1,-1536 # 2625a00 <UART_TX_SCLK_EN+0x625a00>
+42000438:	0062ae23          	sw	t1,28(t0)
+4200043c:	00080337          	lui	t1,0x80
+42000440:	0262a023          	sw	t1,32(t0)
+42000444:	0202a223          	sw	zero,36(t0)
+42000448:	0372a423          	sw	s7,40(t0)
+4200044c:	0202a623          	sw	zero,44(t0)
+42000450:	00000517          	auipc	a0,0x0
+42000454:	7c150513          	addi	a0,a0,1985 # 42000c11 <str_jump>
+42000458:	578000ef          	jal	ra,420009d0 <uart_puts>
+4200045c:	1ec000ef          	jal	ra,42000648 <_uart_flush>
+42000460:	0000100f          	fence.i
+42000464:	4087f537          	lui	a0,0x4087f
+42000468:	8482                	c.jr	s1
+
+4200046a <_emergency_mode>:
+4200046a:	00001517          	auipc	a0,0x1
+4200046e:	93650513          	addi	a0,a0,-1738 # 42000da0 <str_emergency>
+42000472:	55e000ef          	jal	ra,420009d0 <uart_puts>
+42000476:	855e                	c.mv	a0,s7
+42000478:	576000ef          	jal	ra,420009ee <uart_print_hex8>
+4200047c:	00001517          	auipc	a0,0x1
+42000480:	94d50513          	addi	a0,a0,-1715 # 42000dc9 <str_emerg_wait>
+42000484:	54c000ef          	jal	ra,420009d0 <uart_puts>
+42000488:	a079                	c.j	42000516 <_halt>
+
+4200048a <_no_kernel>:
+4200048a:	00000517          	auipc	a0,0x0
+4200048e:	7a850513          	addi	a0,a0,1960 # 42000c32 <str_no_kernel>
+42000492:	53e000ef          	jal	ra,420009d0 <uart_puts>
+42000496:	a041                	c.j	42000516 <_halt>
+
+42000498 <_kernel_bad_addr>:
+42000498:	00000517          	auipc	a0,0x0
+4200049c:	7c450513          	addi	a0,a0,1988 # 42000c5c <str_kern_badaddr>
+420004a0:	530000ef          	jal	ra,420009d0 <uart_puts>
+420004a4:	a88d                	c.j	42000516 <_halt>
+
+420004a6 <_kernel_too_big>:
+420004a6:	00000517          	auipc	a0,0x0
+420004aa:	7e150513          	addi	a0,a0,2017 # 42000c87 <str_kern_toobig>
+420004ae:	522000ef          	jal	ra,420009d0 <uart_puts>
+420004b2:	a095                	c.j	42000516 <_halt>
+
+420004b4 <_kernel_empty>:
+420004b4:	00000517          	auipc	a0,0x0
+420004b8:	7f250513          	addi	a0,a0,2034 # 42000ca6 <str_kern_empty>
+420004bc:	514000ef          	jal	ra,420009d0 <uart_puts>
+420004c0:	a899                	c.j	42000516 <_halt>
+
+420004c2 <_kernel_bad_crc>:
+420004c2:	00001517          	auipc	a0,0x1
+420004c6:	80350513          	addi	a0,a0,-2045 # 42000cc5 <str_kern_badcrc>
+420004ca:	506000ef          	jal	ra,420009d0 <uart_puts>
+420004ce:	00001517          	auipc	a0,0x1
+420004d2:	81850513          	addi	a0,a0,-2024 # 42000ce6 <str_expected>
+420004d6:	4fa000ef          	jal	ra,420009d0 <uart_puts>
+420004da:	8552                	c.mv	a0,s4
+420004dc:	534000ef          	jal	ra,42000a10 <uart_print_hex32>
+420004e0:	00001517          	auipc	a0,0x1
+420004e4:	81250513          	addi	a0,a0,-2030 # 42000cf2 <str_got>
+420004e8:	4e8000ef          	jal	ra,420009d0 <uart_puts>
+420004ec:	02040513          	addi	a0,s0,32
+420004f0:	85ce                	c.mv	a1,s3
+420004f2:	10a000ef          	jal	ra,420005fc <crc32>
+420004f6:	51a000ef          	jal	ra,42000a10 <uart_print_hex32>
+420004fa:	00001517          	auipc	a0,0x1
+420004fe:	8eb50513          	addi	a0,a0,-1813 # 42000de5 <str_crlf>
+42000502:	4ce000ef          	jal	ra,420009d0 <uart_puts>
+42000506:	a801                	c.j	42000516 <_halt>
+
+42000508 <_kernel_copy_fail>:
+42000508:	00000517          	auipc	a0,0x0
+4200050c:	7f250513          	addi	a0,a0,2034 # 42000cfa <str_copy_fail>
+42000510:	4c0000ef          	jal	ra,420009d0 <uart_puts>
+42000514:	a009                	c.j	42000516 <_halt>
+
+42000516 <_halt>:
+42000516:	10500073          	wfi
+4200051a:	bff5                	c.j	42000516 <_halt>
+
+4200051c <_disable_all_wdt>:
+4200051c:	50d84e37          	lui	t3,0x50d84
+42000520:	aa1e0e13          	addi	t3,t3,-1375 # 50d83aa1 <WDT_UNLOCK_KEY>
+42000524:	600082b7          	lui	t0,0x60008
+42000528:	07c2a223          	sw	t3,100(t0) # 60008064 <TIMG0_BASE+0x64>
+4200052c:	0402a423          	sw	zero,72(t0)
+42000530:	00200337          	lui	t1,0x200
+42000534:	0462a423          	sw	t1,72(t0)
+42000538:	0602a223          	sw	zero,100(t0)
+4200053c:	600b22b7          	lui	t0,0x600b2
+42000540:	c0028293          	addi	t0,t0,-1024 # 600b1c00 <RWDT_BASE>
+42000544:	01c2ac23          	sw	t3,24(t0)
+42000548:	0002a023          	sw	zero,0(t0)
+4200054c:	0002ac23          	sw	zero,24(t0)
+42000550:	600b22b7          	lui	t0,0x600b2
+42000554:	c0028293          	addi	t0,t0,-1024 # 600b1c00 <RWDT_BASE>
+42000558:	03c2a023          	sw	t3,32(t0)
+4200055c:	01c2a303          	lw	t1,28(t0)
+42000560:	400003b7          	lui	t2,0x40000
+42000564:	00736333          	or	t1,t1,t2
+42000568:	0062ae23          	sw	t1,28(t0)
+4200056c:	0202a023          	sw	zero,32(t0)
+42000570:	600b22b7          	lui	t0,0x600b2
+42000574:	03c2a223          	sw	t3,36(t0) # 600b2024 <TEE_BASE+0x24>
+42000578:	0002a023          	sw	zero,0(t0)
+4200057c:	0202a223          	sw	zero,36(t0)
+42000580:	8082                	c.jr	ra
+
+42000582 <_flash_enable_dio>:
+42000582:	1161                	c.addi	sp,-8 # 4087fff8 <MAILBOX_ADDR+0x7f8>
+42000584:	c206                	c.swsp	ra,4(sp)
+42000586:	c022                	c.swsp	s0,0(sp)
+42000588:	60002437          	lui	s0,0x60002
+4200058c:	90000337          	lui	t1,0x90000
+42000590:	00642823          	sw	t1,16(s0) # 60002010 <SPI1_BASE+0x10>
+42000594:	70000337          	lui	t1,0x70000
+42000598:	0315                	c.addi	t1,5 # 70000005 <SPI_CMD_BITLEN_7+0x5>
+4200059a:	00642c23          	sw	t1,24(s0)
+4200059e:	431d                	c.li	t1,7
+420005a0:	00642e23          	sw	t1,28(s0)
+420005a4:	00040337          	lui	t1,0x40
+420005a8:	00642023          	sw	t1,0(s0)
+420005ac:	25c000ef          	jal	ra,42000808 <_spi1_wait>
+420005b0:	09842303          	lw	t1,152(s0)
+420005b4:	00237313          	andi	t1,t1,2
+420005b8:	02031e63          	bne	t1,zero,420005f4 <_flash_enable_dio+0x72>
+420005bc:	09842303          	lw	t1,152(s0)
+420005c0:	00236313          	ori	t1,t1,2
+420005c4:	08642c23          	sw	t1,152(s0)
+420005c8:	264000ef          	jal	ra,4200082c <_flash_wren>
+420005cc:	88000337          	lui	t1,0x88000
+420005d0:	00642823          	sw	t1,16(s0)
+420005d4:	70000337          	lui	t1,0x70000
+420005d8:	0305                	c.addi	t1,1 # 70000001 <SPI_CMD_BITLEN_7+0x1>
+420005da:	00642c23          	sw	t1,24(s0)
+420005de:	431d                	c.li	t1,7
+420005e0:	00642e23          	sw	t1,28(s0)
+420005e4:	00040337          	lui	t1,0x40
+420005e8:	00642023          	sw	t1,0(s0)
+420005ec:	21c000ef          	jal	ra,42000808 <_spi1_wait>
+420005f0:	268000ef          	jal	ra,42000858 <_flash_wait_wip>
+420005f4:	4402                	c.lwsp	s0,0(sp)
+420005f6:	4092                	c.lwsp	ra,4(sp)
+420005f8:	0121                	c.addi	sp,8
+420005fa:	8082                	c.jr	ra
+
+420005fc <crc32>:
+420005fc:	52fd                	c.li	t0,-1
+420005fe:	00b50e33          	add	t3,a0,a1
+42000602:	00001f17          	auipc	t5,0x1
+42000606:	93af0f13          	addi	t5,t5,-1734 # 42000f3c <crc32_table>
+4200060a:	03c57c63          	bgeu	a0,t3,42000642 <crc32+0x46>
+4200060e:	00054303          	lbu	t1,0(a0)
+42000612:	0062c2b3          	xor	t0,t0,t1
+42000616:	00f2f393          	andi	t2,t0,15
+4200061a:	0042d293          	srli	t0,t0,0x4
+4200061e:	038a                	c.slli	t2,0x2
+42000620:	93fa                	c.add	t2,t5
+42000622:	0003a303          	lw	t1,0(t2) # 40000000 <SPI_USR_ADDR>
+42000626:	0062c2b3          	xor	t0,t0,t1
+4200062a:	00f2f393          	andi	t2,t0,15
+4200062e:	0042d293          	srli	t0,t0,0x4
+42000632:	038a                	c.slli	t2,0x2
+42000634:	93fa                	c.add	t2,t5
+42000636:	0003a303          	lw	t1,0(t2)
+4200063a:	0062c2b3          	xor	t0,t0,t1
+4200063e:	0505                	c.addi	a0,1
+42000640:	b7e9                	c.j	4200060a <crc32+0xe>
+42000642:	fff2c513          	xori	a0,t0,-1
+42000646:	8082                	c.jr	ra
+
+42000648 <_uart_flush>:
+42000648:	600002b7          	lui	t0,0x60000
+4200064c:	6389                	c.lui	t2,0x2
+4200064e:	71038393          	addi	t2,t2,1808 # 2710 <UART_SYNC_TIMEOUT>
+42000652:	01c2a303          	lw	t1,28(t0) # 6000001c <UART0_BASE+0x1c>
+42000656:	01035313          	srli	t1,t1,0x10
+4200065a:	0ff37313          	andi	t1,t1,255
+4200065e:	00031a63          	bne	t1,zero,42000672 <_uart_flush+0x2a>
+42000662:	01c2a303          	lw	t1,28(t0)
+42000666:	00c35313          	srli	t1,t1,0xc
+4200066a:	00137313          	andi	t1,t1,1
+4200066e:	00031563          	bne	t1,zero,42000678 <_uart_flush+0x30>
+42000672:	13fd                	c.addi	t2,-1
+42000674:	fc039fe3          	bne	t2,zero,42000652 <_uart_flush+0xa>
+42000678:	8082                	c.jr	ra
+
+4200067a <uart_getc>:
+4200067a:	600002b7          	lui	t0,0x60000
+4200067e:	000f43b7          	lui	t2,0xf4
+42000682:	24038393          	addi	t2,t2,576 # f4240 <UART_RX_TIMEOUT>
+42000686:	01c2a303          	lw	t1,28(t0) # 6000001c <UART0_BASE+0x1c>
+4200068a:	0ff37313          	andi	t1,t1,255
+4200068e:	00031663          	bne	t1,zero,4200069a <uart_getc+0x20>
+42000692:	13fd                	c.addi	t2,-1
+42000694:	fe0399e3          	bne	t2,zero,42000686 <uart_getc+0xc>
+42000698:	bdbd                	c.j	42000516 <_halt>
+4200069a:	0002c503          	lbu	a0,0(t0)
+4200069e:	8082                	c.jr	ra
+
+420006a0 <uart_read_line>:
+420006a0:	1141                	c.addi	sp,-16
+420006a2:	c606                	c.swsp	ra,12(sp)
+420006a4:	c422                	c.swsp	s0,8(sp)
+420006a6:	c226                	c.swsp	s1,4(sp)
+420006a8:	c04a                	c.swsp	s2,0(sp)
+420006aa:	842a                	c.mv	s0,a0
+420006ac:	84ae                	c.mv	s1,a1
+420006ae:	4901                	c.li	s2,0
+420006b0:	04997963          	bgeu	s2,s1,42000702 <uart_read_line+0x62>
+420006b4:	fc7ff0ef          	jal	ra,4200067a <uart_getc>
+420006b8:	42b5                	c.li	t0,13
+420006ba:	04550463          	beq	a0,t0,42000702 <uart_read_line+0x62>
+420006be:	42a9                	c.li	t0,10
+420006c0:	04550163          	beq	a0,t0,42000702 <uart_read_line+0x62>
+420006c4:	42a1                	c.li	t0,8
+420006c6:	02550063          	beq	a0,t0,420006e6 <uart_read_line+0x46>
+420006ca:	07f00293          	addi	t0,zero,127
+420006ce:	00550c63          	beq	a0,t0,420006e6 <uart_read_line+0x46>
+420006d2:	012402b3          	add	t0,s0,s2
+420006d6:	00a28023          	sb	a0,0(t0)
+420006da:	0905                	c.addi	s2,1
+420006dc:	02a00513          	addi	a0,zero,42
+420006e0:	2c4000ef          	jal	ra,420009a4 <uart_putc>
+420006e4:	b7f1                	c.j	420006b0 <uart_read_line+0x10>
+420006e6:	fc0905e3          	beq	s2,zero,420006b0 <uart_read_line+0x10>
+420006ea:	197d                	c.addi	s2,-1
+420006ec:	4521                	c.li	a0,8
+420006ee:	2b6000ef          	jal	ra,420009a4 <uart_putc>
+420006f2:	02000513          	addi	a0,zero,32
+420006f6:	2ae000ef          	jal	ra,420009a4 <uart_putc>
+420006fa:	4521                	c.li	a0,8
+420006fc:	2a8000ef          	jal	ra,420009a4 <uart_putc>
+42000700:	bf45                	c.j	420006b0 <uart_read_line+0x10>
+42000702:	4529                	c.li	a0,10
+42000704:	2a0000ef          	jal	ra,420009a4 <uart_putc>
+42000708:	854a                	c.mv	a0,s2
+4200070a:	40b2                	c.lwsp	ra,12(sp)
+4200070c:	4422                	c.lwsp	s0,8(sp)
+4200070e:	4492                	c.lwsp	s1,4(sp)
+42000710:	4902                	c.lwsp	s2,0(sp)
+42000712:	0141                	c.addi	sp,16
+42000714:	8082                	c.jr	ra
+
+42000716 <sha256_hash>:
+42000716:	1141                	c.addi	sp,-16
+42000718:	c606                	c.swsp	ra,12(sp)
+4200071a:	c422                	c.swsp	s0,8(sp)
+4200071c:	c226                	c.swsp	s1,4(sp)
+4200071e:	c04a                	c.swsp	s2,0(sp)
+42000720:	842a                	c.mv	s0,a0
+42000722:	84ae                	c.mv	s1,a1
+42000724:	600962b7          	lui	t0,0x60096
+42000728:	4305                	c.li	t1,1
+4200072a:	0c62a623          	sw	t1,204(t0) # 600960cc <PCR_BASE+0xcc>
+4200072e:	60089937          	lui	s2,0x60089
+42000732:	4289                	c.li	t0,2
+42000734:	00592023          	sw	t0,0(s2) # 60089000 <SHA_BASE>
+42000738:	7139                	c.addi16sp	sp,-64
+4200073a:	828a                	c.mv	t0,sp
+4200073c:	4341                	c.li	t1,16
+4200073e:	0002a023          	sw	zero,0(t0)
+42000742:	0291                	c.addi	t0,4
+42000744:	137d                	c.addi	t1,-1 # 3ffff <SHA_BUSY_TIMEOUT+0x2795f>
+42000746:	fe031ce3          	bne	t1,zero,4200073e <sha256_hash+0x28>
+4200074a:	82a2                	c.mv	t0,s0
+4200074c:	830a                	c.mv	t1,sp
+4200074e:	83a6                	c.mv	t2,s1
+42000750:	00038a63          	beq	t2,zero,42000764 <sha256_hash+0x4e>
+42000754:	0002ce03          	lbu	t3,0(t0)
+42000758:	01c30023          	sb	t3,0(t1)
+4200075c:	0285                	c.addi	t0,1
+4200075e:	0305                	c.addi	t1,1
+42000760:	13fd                	c.addi	t2,-1
+42000762:	b7fd                	c.j	42000750 <sha256_hash+0x3a>
+42000764:	08000e13          	addi	t3,zero,128
+42000768:	01c30023          	sb	t3,0(t1)
+4200076c:	00349293          	slli	t0,s1,0x3
+42000770:	02510c23          	sb	t0,56(sp)
+42000774:	0082d313          	srli	t1,t0,0x8
+42000778:	02610ca3          	sb	t1,57(sp)
+4200077c:	0102d313          	srli	t1,t0,0x10
+42000780:	02610d23          	sb	t1,58(sp)
+42000784:	0182d313          	srli	t1,t0,0x18
+42000788:	02610da3          	sb	t1,59(sp)
+4200078c:	02010e23          	sb	zero,60(sp)
+42000790:	02010ea3          	sb	zero,61(sp)
+42000794:	02010f23          	sb	zero,62(sp)
+42000798:	02010fa3          	sb	zero,63(sp)
+4200079c:	828a                	c.mv	t0,sp
+4200079e:	4341                	c.li	t1,16
+420007a0:	83ca                	c.mv	t2,s2
+420007a2:	08038393          	addi	t2,t2,128
+420007a6:	0002ae03          	lw	t3,0(t0)
+420007aa:	01c3a023          	sw	t3,0(t2)
+420007ae:	0291                	c.addi	t0,4
+420007b0:	0391                	c.addi	t2,4
+420007b2:	137d                	c.addi	t1,-1
+420007b4:	fe0319e3          	bne	t1,zero,420007a6 <sha256_hash+0x90>
+420007b8:	6121                	c.addi16sp	sp,64
+420007ba:	4285                	c.li	t0,1
+420007bc:	00592823          	sw	t0,16(s2)
+420007c0:	6361                	c.lui	t1,0x18
+420007c2:	6a030313          	addi	t1,t1,1696 # 186a0 <SHA_BUSY_TIMEOUT>
+420007c6:	01892283          	lw	t0,24(s2)
+420007ca:	0012f293          	andi	t0,t0,1
+420007ce:	00028663          	beq	t0,zero,420007da <sha256_hash+0xc4>
+420007d2:	137d                	c.addi	t1,-1
+420007d4:	fe0319e3          	bne	t1,zero,420007c6 <sha256_hash+0xb0>
+420007d8:	bb3d                	c.j	42000516 <_halt>
+420007da:	fe800297          	auipc	t0,0xfe800
+420007de:	82628293          	addi	t0,t0,-2010 # 40800000 <__bss_start>
+420007e2:	834a                	c.mv	t1,s2
+420007e4:	04030313          	addi	t1,t1,64
+420007e8:	43a1                	c.li	t2,8
+420007ea:	00032e03          	lw	t3,0(t1)
+420007ee:	01c2a023          	sw	t3,0(t0)
+420007f2:	0291                	c.addi	t0,4
+420007f4:	0311                	c.addi	t1,4
+420007f6:	13fd                	c.addi	t2,-1
+420007f8:	fe0399e3          	bne	t2,zero,420007ea <sha256_hash+0xd4>
+420007fc:	40b2                	c.lwsp	ra,12(sp)
+420007fe:	4422                	c.lwsp	s0,8(sp)
+42000800:	4492                	c.lwsp	s1,4(sp)
+42000802:	4902                	c.lwsp	s2,0(sp)
+42000804:	0141                	c.addi	sp,16
+42000806:	8082                	c.jr	ra
+
+42000808 <_spi1_wait>:
+42000808:	600022b7          	lui	t0,0x60002
+4200080c:	63e1                	c.lui	t2,0x18
+4200080e:	6a038393          	addi	t2,t2,1696 # 186a0 <SHA_BUSY_TIMEOUT>
+42000812:	00040e37          	lui	t3,0x40
+42000816:	0002a303          	lw	t1,0(t0) # 60002000 <SPI1_BASE>
+4200081a:	01c37333          	and	t1,t1,t3
+4200081e:	00030663          	beq	t1,zero,4200082a <_spi1_wait+0x22>
+42000822:	13fd                	c.addi	t2,-1
+42000824:	fe0399e3          	bne	t2,zero,42000816 <_spi1_wait+0xe>
+42000828:	b1fd                	c.j	42000516 <_halt>
+4200082a:	8082                	c.jr	ra
+
+4200082c <_flash_wren>:
+4200082c:	1171                	c.addi	sp,-4
+4200082e:	c006                	c.swsp	ra,0(sp)
+42000830:	600022b7          	lui	t0,0x60002
+42000834:	80000337          	lui	t1,0x80000
+42000838:	0062a823          	sw	t1,16(t0) # 60002010 <SPI1_BASE+0x10>
+4200083c:	70000337          	lui	t1,0x70000
+42000840:	0319                	c.addi	t1,6 # 70000006 <SPI_CMD_BITLEN_7+0x6>
+42000842:	0062ac23          	sw	t1,24(t0)
+42000846:	00040337          	lui	t1,0x40
+4200084a:	0062a023          	sw	t1,0(t0)
+4200084e:	fbbff0ef          	jal	ra,42000808 <_spi1_wait>
+42000852:	4082                	c.lwsp	ra,0(sp)
+42000854:	0111                	c.addi	sp,4
+42000856:	8082                	c.jr	ra
+
+42000858 <_flash_wait_wip>:
+42000858:	1151                	c.addi	sp,-12
+4200085a:	c406                	c.swsp	ra,8(sp)
+4200085c:	c24a                	c.swsp	s2,4(sp)
+4200085e:	c04e                	c.swsp	s3,0(sp)
+42000860:	60002937          	lui	s2,0x60002
+42000864:	009899b7          	lui	s3,0x989
+42000868:	68098993          	addi	s3,s3,1664 # 989680 <FLASH_WIP_TIMEOUT>
+4200086c:	90000337          	lui	t1,0x90000
+42000870:	00692823          	sw	t1,16(s2) # 60002010 <SPI1_BASE+0x10>
+42000874:	70000337          	lui	t1,0x70000
+42000878:	0315                	c.addi	t1,5 # 70000005 <SPI_CMD_BITLEN_7+0x5>
+4200087a:	00692c23          	sw	t1,24(s2)
+4200087e:	431d                	c.li	t1,7
+42000880:	00692e23          	sw	t1,28(s2)
+42000884:	00040337          	lui	t1,0x40
+42000888:	00692023          	sw	t1,0(s2)
+4200088c:	f7dff0ef          	jal	ra,42000808 <_spi1_wait>
+42000890:	09892303          	lw	t1,152(s2)
+42000894:	00137313          	andi	t1,t1,1
+42000898:	00030663          	beq	t1,zero,420008a4 <_flash_wait_wip+0x4c>
+4200089c:	19fd                	c.addi	s3,-1
+4200089e:	fc0997e3          	bne	s3,zero,4200086c <_flash_wait_wip+0x14>
+420008a2:	b995                	c.j	42000516 <_halt>
+420008a4:	4982                	c.lwsp	s3,0(sp)
+420008a6:	4912                	c.lwsp	s2,4(sp)
+420008a8:	40a2                	c.lwsp	ra,8(sp)
+420008aa:	0131                	c.addi	sp,12
+420008ac:	8082                	c.jr	ra
+
+420008ae <flash_erase_sector>:
+420008ae:	1161                	c.addi	sp,-8
+420008b0:	c206                	c.swsp	ra,4(sp)
+420008b2:	c022                	c.swsp	s0,0(sp)
+420008b4:	842a                	c.mv	s0,a0
+420008b6:	f77ff0ef          	jal	ra,4200082c <_flash_wren>
+420008ba:	600022b7          	lui	t0,0x60002
+420008be:	c0000337          	lui	t1,0xc0000
+420008c2:	0062a823          	sw	t1,16(t0) # 60002010 <SPI1_BASE+0x10>
+420008c6:	b8000337          	lui	t1,0xb8000
+420008ca:	0062aa23          	sw	t1,20(t0)
+420008ce:	70000337          	lui	t1,0x70000
+420008d2:	02030313          	addi	t1,t1,32 # 70000020 <SPI_CMD_BITLEN_7+0x20>
+420008d6:	0062ac23          	sw	t1,24(t0)
+420008da:	00841313          	slli	t1,s0,0x8
+420008de:	0062a223          	sw	t1,4(t0)
+420008e2:	00040337          	lui	t1,0x40
+420008e6:	0062a023          	sw	t1,0(t0)
+420008ea:	f1fff0ef          	jal	ra,42000808 <_spi1_wait>
+420008ee:	f6bff0ef          	jal	ra,42000858 <_flash_wait_wip>
+420008f2:	4092                	c.lwsp	ra,4(sp)
+420008f4:	4402                	c.lwsp	s0,0(sp)
+420008f6:	0121                	c.addi	sp,8
+420008f8:	8082                	c.jr	ra
+
+420008fa <flash_write_pw_slot>:
+420008fa:	1141                	c.addi	sp,-16
+420008fc:	c606                	c.swsp	ra,12(sp)
+420008fe:	c422                	c.swsp	s0,8(sp)
+42000900:	c226                	c.swsp	s1,4(sp)
+42000902:	c04a                	c.swsp	s2,0(sp)
+42000904:	842a                	c.mv	s0,a0
+42000906:	84ae                	c.mv	s1,a1
+42000908:	8526                	c.mv	a0,s1
+4200090a:	fa5ff0ef          	jal	ra,420008ae <flash_erase_sector>
+4200090e:	f1fff0ef          	jal	ra,4200082c <_flash_wren>
+42000912:	600022b7          	lui	t0,0x60002
+42000916:	c6a55337          	lui	t1,0xc6a55
+4200091a:	50130313          	addi	t1,t1,1281 # c6a55501 <PW_MAGIC_VALUE>
+4200091e:	0862ac23          	sw	t1,152(t0) # 60002098 <SPI1_BASE+0x98>
+42000922:	43a1                	c.li	t2,8
+42000924:	8e22                	c.mv	t3,s0
+42000926:	09828e93          	addi	t4,t0,152
+4200092a:	0e91                	c.addi	t4,4
+4200092c:	000e2f03          	lw	t5,0(t3) # 40000 <SPI_USR_BIT>
+42000930:	01eea023          	sw	t5,0(t4)
+42000934:	0e11                	c.addi	t3,4
+42000936:	0e91                	c.addi	t4,4
+42000938:	13fd                	c.addi	t2,-1
+4200093a:	fe0399e3          	bne	t2,zero,4200092c <flash_write_pw_slot+0x32>
+4200093e:	c8000337          	lui	t1,0xc8000
+42000942:	0062a823          	sw	t1,16(t0)
+42000946:	b8000337          	lui	t1,0xb8000
+4200094a:	0062aa23          	sw	t1,20(t0)
+4200094e:	70000337          	lui	t1,0x70000
+42000952:	0309                	c.addi	t1,2 # 70000002 <SPI_CMD_BITLEN_7+0x2>
+42000954:	0062ac23          	sw	t1,24(t0)
+42000958:	00849313          	slli	t1,s1,0x8
+4200095c:	0062a223          	sw	t1,4(t0)
+42000960:	11f00313          	addi	t1,zero,287
+42000964:	0062ae23          	sw	t1,28(t0)
+42000968:	00040337          	lui	t1,0x40
+4200096c:	0062a023          	sw	t1,0(t0)
+42000970:	e99ff0ef          	jal	ra,42000808 <_spi1_wait>
+42000974:	ee5ff0ef          	jal	ra,42000858 <_flash_wait_wip>
+42000978:	40b2                	c.lwsp	ra,12(sp)
+4200097a:	4422                	c.lwsp	s0,8(sp)
+4200097c:	4492                	c.lwsp	s1,4(sp)
+4200097e:	4902                	c.lwsp	s2,0(sp)
+42000980:	0141                	c.addi	sp,16
+42000982:	8082                	c.jr	ra
+
+42000984 <_uart_wait_sync>:
+42000984:	600002b7          	lui	t0,0x60000
+42000988:	6389                	c.lui	t2,0x2
+4200098a:	71038393          	addi	t2,t2,1808 # 2710 <UART_SYNC_TIMEOUT>
+4200098e:	0982a303          	lw	t1,152(t0) # 60000098 <UART0_BASE+0x98>
+42000992:	00137313          	andi	t1,t1,1
+42000996:	00030663          	beq	t1,zero,420009a2 <_uart_wait_sync+0x1e>
+4200099a:	13fd                	c.addi	t2,-1
+4200099c:	fe0399e3          	bne	t2,zero,4200098e <_uart_wait_sync+0xa>
+420009a0:	be9d                	c.j	42000516 <_halt>
+420009a2:	8082                	c.jr	ra
+
+420009a4 <uart_putc>:
+420009a4:	600002b7          	lui	t0,0x60000
+420009a8:	6e09                	c.lui	t3,0x2
+420009aa:	710e0e13          	addi	t3,t3,1808 # 2710 <UART_SYNC_TIMEOUT>
+420009ae:	01c2a303          	lw	t1,28(t0) # 6000001c <UART0_BASE+0x1c>
+420009b2:	01035313          	srli	t1,t1,0x10
+420009b6:	0ff37313          	andi	t1,t1,255
+420009ba:	08000393          	addi	t2,zero,128
+420009be:	00736663          	bltu	t1,t2,420009ca <uart_putc+0x26>
+420009c2:	1e7d                	c.addi	t3,-1
+420009c4:	fe0e15e3          	bne	t3,zero,420009ae <uart_putc+0xa>
+420009c8:	b6b9                	c.j	42000516 <_halt>
+420009ca:	00a28023          	sb	a0,0(t0)
+420009ce:	8082                	c.jr	ra
+
+420009d0 <uart_puts>:
+420009d0:	1161                	c.addi	sp,-8
+420009d2:	c206                	c.swsp	ra,4(sp)
+420009d4:	c022                	c.swsp	s0,0(sp)
+420009d6:	842a                	c.mv	s0,a0
+420009d8:	00044503          	lbu	a0,0(s0)
+420009dc:	c509                	c.beqz	a0,420009e6 <uart_puts+0x16>
+420009de:	fc7ff0ef          	jal	ra,420009a4 <uart_putc>
+420009e2:	0405                	c.addi	s0,1
+420009e4:	bfd5                	c.j	420009d8 <uart_puts+0x8>
+420009e6:	4092                	c.lwsp	ra,4(sp)
+420009e8:	4402                	c.lwsp	s0,0(sp)
+420009ea:	0121                	c.addi	sp,8
+420009ec:	8082                	c.jr	ra
+
+420009ee <uart_print_hex8>:
+420009ee:	1161                	c.addi	sp,-8
+420009f0:	c206                	c.swsp	ra,4(sp)
+420009f2:	c022                	c.swsp	s0,0(sp)
+420009f4:	842a                	c.mv	s0,a0
+420009f6:	00445513          	srli	a0,s0,0x4
+420009fa:	893d                	c.andi	a0,15
+420009fc:	03a000ef          	jal	ra,42000a36 <_print_nibble>
+42000a00:	00f47513          	andi	a0,s0,15
+42000a04:	032000ef          	jal	ra,42000a36 <_print_nibble>
+42000a08:	4092                	c.lwsp	ra,4(sp)
+42000a0a:	4402                	c.lwsp	s0,0(sp)
+42000a0c:	0121                	c.addi	sp,8
+42000a0e:	8082                	c.jr	ra
+
+42000a10 <uart_print_hex32>:
+42000a10:	1141                	c.addi	sp,-16
+42000a12:	c606                	c.swsp	ra,12(sp)
+42000a14:	c422                	c.swsp	s0,8(sp)
+42000a16:	c226                	c.swsp	s1,4(sp)
+42000a18:	842a                	c.mv	s0,a0
+42000a1a:	44f1                	c.li	s1,28
+42000a1c:	00945533          	srl	a0,s0,s1
+42000a20:	893d                	c.andi	a0,15
+42000a22:	014000ef          	jal	ra,42000a36 <_print_nibble>
+42000a26:	14f1                	c.addi	s1,-4
+42000a28:	fe04dae3          	bge	s1,zero,42000a1c <uart_print_hex32+0xc>
+42000a2c:	40b2                	c.lwsp	ra,12(sp)
+42000a2e:	4422                	c.lwsp	s0,8(sp)
+42000a30:	4492                	c.lwsp	s1,4(sp)
+42000a32:	0141                	c.addi	sp,16
+42000a34:	8082                	c.jr	ra
+
+42000a36 <_print_nibble>:
+42000a36:	ff650293          	addi	t0,a0,-10
+42000a3a:	0002c563          	blt	t0,zero,42000a44 <_print_nibble+0xe>
+42000a3e:	03750513          	addi	a0,a0,55
+42000a42:	b78d                	c.j	420009a4 <uart_putc>
+42000a44:	03050513          	addi	a0,a0,48
+42000a48:	bfb1                	c.j	420009a4 <uart_putc>
+42000a4a:	00000013          	addi	zero,zero,0
+42000a4e:	0001                	c.addi	zero,0
+
+42000a50 <_trap_handler>:
+42000a50:	1141                	c.addi	sp,-16
+42000a52:	c606                	c.swsp	ra,12(sp)
+42000a54:	c422                	c.swsp	s0,8(sp)
+42000a56:	c226                	c.swsp	s1,4(sp)
+42000a58:	34202473          	csrrs	s0,mcause,zero
+42000a5c:	341024f3          	csrrs	s1,mepc,zero
+42000a60:	00000517          	auipc	a0,0x0
+42000a64:	38850513          	addi	a0,a0,904 # 42000de8 <str_trap>
+42000a68:	f69ff0ef          	jal	ra,420009d0 <uart_puts>
+42000a6c:	00000517          	auipc	a0,0x0
+42000a70:	38850513          	addi	a0,a0,904 # 42000df4 <str_mcause_is>
+42000a74:	f5dff0ef          	jal	ra,420009d0 <uart_puts>
+42000a78:	8522                	c.mv	a0,s0
+42000a7a:	f97ff0ef          	jal	ra,42000a10 <uart_print_hex32>
+42000a7e:	00000517          	auipc	a0,0x0
+42000a82:	38050513          	addi	a0,a0,896 # 42000dfe <str_mepc_is>
+42000a86:	f4bff0ef          	jal	ra,420009d0 <uart_puts>
+42000a8a:	8526                	c.mv	a0,s1
+42000a8c:	f85ff0ef          	jal	ra,42000a10 <uart_print_hex32>
+42000a90:	00000517          	auipc	a0,0x0
+42000a94:	35550513          	addi	a0,a0,853 # 42000de5 <str_crlf>
+42000a98:	f39ff0ef          	jal	ra,420009d0 <uart_puts>
+42000a9c:	40b2                	c.lwsp	ra,12(sp)
+42000a9e:	4422                	c.lwsp	s0,8(sp)
+42000aa0:	4492                	c.lwsp	s1,4(sp)
+42000aa2:	0141                	c.addi	sp,16
+42000aa4:	bc8d                	c.j	42000516 <_halt>
+42000aa6:	0001                	c.addi	zero,0
